@@ -1,4 +1,3 @@
-// src/pages/Register.jsx
 import React, { useState } from "react";
 import { auth, db } from "../firebase";
 import { createUserWithEmailAndPassword } from "firebase/auth";
@@ -16,7 +15,7 @@ const Register = ({ onToggle }) => {
     console.log("register called ==> ", userId)
     e.preventDefault();
     try {
-      const email = `${userId}@itemapp.com`; // Construct pseudo email
+      const email = `${userId}@itemapp.com`;
       const creds = await createUserWithEmailAndPassword(auth, email, password);
       await setDoc(doc(db, "users", creds.user.uid), { name, userId });
     } catch (err) {

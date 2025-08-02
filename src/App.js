@@ -3,25 +3,24 @@ import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
 import Register from "./pages/Register";
 import Login from "./pages/Login";
 import ItemTable from "./pages/ItemTable";
+import Settings from "./pages/Settings";
+import { IoIosLogOut } from "react-icons/io";
+import { FiSettings } from "react-icons/fi";
+import { AiFillProduct } from "react-icons/ai";
 
 export default function App() {
   const [isRegister, setIsRegister] = useState(false);
   const [user, setUser] = useState(null);
+  const [view, setView] = useState("items"); // add view state
 
   const auth = getAuth();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      if (currentUser) {
-        setUser(currentUser);
-      } else {
-        setUser(null);
-      }
+      setUser(currentUser || null);
     });
-
-    return () => unsubscribe();
+    return unsubscribe;
   }, [auth]);
-
 
   if (!user) {
     return isRegister ? (
@@ -34,16 +33,45 @@ export default function App() {
   return (
     <div>
       <header className="flex justify-between items-center p-4 bg-blue-600 text-white">
-        <h1 className="text-lg font-bold">Item Manager</h1>
+        <h1 className="text-xl font-bold font-serif">Diversify Item Manager</h1>
         <p className="capitalize">Hello, {user.displayName || (user.email ? user.email.replace(/@itemapp\.com$/, "") : "")}</p>
-        <button
-          onClick={() => signOut(auth)}
-          className="bg-white text-blue-600 px-2 py-1 rounded"
-        >Logout</button>
+        <div className="flex flex-col sm:flex-row gap-2">
+          {view === "settings" ? (
+            <>
+              <button
+                onClick={() => setView("items")}
+                className="bg-white px-2 py-1 rounded flex items-center text-black shadow-sm shadow-black hover:shadow-md hover:shadow-black"
+              >
+                <AiFillProduct className="text-black mt-0.5 text-xl shadow-sm rounded-lg mr-1" />
+                Product
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={() => setView("settings")}
+              className="bg-white px-2 py-1 rounded flex items-center text-black shadow-sm shadow-black hover:shadow-md hover:shadow-black"
+            >
+              <FiSettings className="text-black mt-0.5 text-xl shadow-sm rounded-lg mr-1" />
+              Settings
+            </button>
+          )}
+          <button
+            onClick={() => {
+              if (window.confirm("Are you sure you want to logout?")) {
+                signOut(auth);
+              }
+            }}
+            className="bg-white px-2 py-1 rounded flex items-center text-black shadow-sm shadow-black hover:shadow-md hover:shadow-black"
+          >
+            <IoIosLogOut className="text-black mt-0.5 text-xl shadow-sm rounded-lg mr-1" />
+            Logout
+          </button>
+        </div>
       </header>
-      <ItemTable
-        user={user}
-      />
+      <main>
+        {view === "items" && <ItemTable user={user} />}
+        {view === "settings" && <Settings onBack={() => setView("items")} user={user} />}
+      </main>
     </div>
   );
 }
