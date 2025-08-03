@@ -1,6 +1,12 @@
 import { useState, useEffect } from "react";
 import { db } from "../../firebase";
-import { collection, addDoc, updateDoc, doc, getDocs } from "firebase/firestore";
+import {
+  collection,
+  addDoc,
+  updateDoc,
+  doc,
+  getDocs,
+} from "firebase/firestore";
 
 function capitalizeFirstLetter(str) {
   if (!str) return "";
@@ -27,14 +33,18 @@ const AddProductForm = ({
     }
     async function fetchPlatforms() {
       const querySnapshot = await getDocs(collection(db, "platform"));
-      setPlatformOptions(querySnapshot.docs.map((doc) => doc.data().platformName));
+      setPlatformOptions(
+        querySnapshot.docs.map((doc) => doc.data().platformName)
+      );
       if (!form.platform) {
         setForm((f) => ({ ...f, platform: "amazon" }));
       }
     }
     async function fetchReviewers() {
       const querySnapshot = await getDocs(collection(db, "reviewers"));
-      const reviewerNames = querySnapshot.docs.map((doc) => doc.data().reviewerName);
+      const reviewerNames = querySnapshot.docs.map(
+        (doc) => doc.data().reviewerName
+      );
       setReviewerOptions(reviewerNames);
       setPaidByOptions(reviewerNames);
     }
@@ -48,7 +58,9 @@ const AddProductForm = ({
     const transformedData = {
       ...form,
       productName: capitalizeFirstLetter(form.productName.trim()),
-      orderId: capitalizeFirstLetter(form.orderId.trim()),
+      orderId: form.orderId.trim()
+        ? capitalizeFirstLetter(form.orderId.trim())
+        : "N/A",
       productCode: capitalizeFirstLetter(form.productCode.trim()),
       userId: capitalizeFirstLetter(form.userId.trim()),
       platform: capitalizeFirstLetter(form.platform.trim()),
@@ -59,7 +71,6 @@ const AddProductForm = ({
     try {
       const docRef = await addDoc(collection(db, "items"), {
         ...transformedData,
-        email: defaultUser,
       });
       const generatedId = docRef.id;
       console.log("Document written with ID: ", generatedId);
@@ -93,8 +104,7 @@ const AddProductForm = ({
         />
         <input
           className="border rounded px-2 py-1"
-          placeholder="Order ID"
-          required
+          placeholder="Order ID (Optional)"
           value={form.orderId}
           onChange={(e) => onFieldChange("orderId", e.target.value)}
         />

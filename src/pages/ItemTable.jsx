@@ -38,6 +38,7 @@ const ItemTable = ({ user }) => {
   const [form, setForm] = useState(emptyItem);
   const [filterUser, setFilterUser] = useState("All");
   const [filterPaidBy, setFilterPaidBy] = useState("All");
+  const [filterStatus, setFilterStatus] = useState("All");
   const [reviewerPaidByOptions, setReviewerPaidByOptions] = useState([]);
 
   const fetchItems = async () => {
@@ -57,6 +58,12 @@ const ItemTable = ({ user }) => {
       if (filterPaidBy !== "All") {
         filtered = filtered.filter((item) => item.paidBy === filterPaidBy);
       }
+      if (filterStatus !== "All") {
+        if (filterStatus === "Review Live")
+          filtered = filtered.filter((item) => item.reviewLive);
+        if (filterStatus === "Need Reject") filtered = filtered.filter((item) => item.reject);
+        if (filterStatus === "Refund Process") filtered = filtered.filter((item) => item.refundProcess);
+      }
       setFilteredItems(filtered);
     } catch (error) {
       console.error("Error fetching items:", error);
@@ -67,10 +74,10 @@ const ItemTable = ({ user }) => {
 
   useEffect(() => {
     fetchItems();
-  }, [user, filterUser, filterPaidBy]);
+  }, [user, filterUser, filterPaidBy, filterStatus]);
 
   useEffect(() => {
-    if (filterUser === "All" && filterPaidBy === "All") {
+    if (filterUser === "All" && filterPaidBy === "All" && filterStatus === "All") {
       setFilteredItems(allItems);
     } else {
       let filtered = allItems;
@@ -80,9 +87,14 @@ const ItemTable = ({ user }) => {
       if (filterPaidBy !== "All") {
         filtered = filtered.filter((item) => item.paidBy === filterPaidBy);
       }
+      if (filterStatus !== "All") {
+        if (filterStatus === "Review Live") filtered = filtered.filter((item) => item.reviewLive);
+        if (filterStatus === "Need Reject") filtered = filtered.filter((item) => item.reject);
+        if (filterStatus === "Refund Process") filtered = filtered.filter((item) => item.refundProcess);
+      }
       setFilteredItems(filtered);
     }
-  }, [filterUser, filterPaidBy, allItems]);
+  }, [filterUser, filterPaidBy, filterStatus, allItems]);
 
   const uniqueUserIds = Array.from(
     new Set(allItems.map((item) => item.userId).filter(Boolean))
@@ -114,10 +126,10 @@ const ItemTable = ({ user }) => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this item?")) {
       try {
-        await deleteDoc(doc(db, "items", id));
+        await updateDoc(doc(db, "items", id), { isDeleted: true });
         fetchItems();
       } catch (error) {
-        console.error("Error deleting document:", error);
+        console.error("Error setting isDeleted flag:", error);
       }
     }
   };
@@ -128,6 +140,7 @@ const ItemTable = ({ user }) => {
         <div>
           <h4 className="font-serif font-bold mb-1 text-lg">Filters</h4>
           <div className="flex items-center space-x-2">
+            {/* User Filter */}
             <>
               <label htmlFor="userFilter" className="font-medium text-sm">
                 User:
@@ -146,6 +159,7 @@ const ItemTable = ({ user }) => {
                 ))}
               </select>
             </>
+            {/* Paid By Filter */}
             <>
               <label htmlFor="paidByFilter" className="font-medium text-sm">
                 Paid By:
@@ -162,6 +176,23 @@ const ItemTable = ({ user }) => {
                     {pb}
                   </option>
                 ))}
+              </select>
+            </>
+            {/* Status Filter */}
+            <>
+              <label htmlFor="statusFilter" className="font-medium text-sm">
+                Status:
+              </label>
+              <select
+                id="statusFilter"
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+                className="border border-cyan-400 rounded text-sm"
+              >
+                <option value="All">All</option>
+                <option value="Review Live">Review Live</option>
+                <option value="Need Reject">Need Reject</option>
+                <option value="Refund Process">Refund Process</option>
               </select>
             </>
           </div>

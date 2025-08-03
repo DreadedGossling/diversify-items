@@ -1,6 +1,15 @@
 import { useState, useEffect } from "react";
 
+// Helper to format yyyy-mm-dd to dd-mm-yyyy
+const formatDate = (dateStr) => {
+  if (!dateStr) return "";
+  const [year, month, day] = dateStr.split("-");
+  if (!year || !month || !day) return dateStr;
+  return `${day}-${month}-${year}`;
+};
+
 const tableFields = [
+  "S.No.",
   "Product Name",
   "Order ID",
   "Product Code",
@@ -115,19 +124,34 @@ const Table = ({ items, handleUpdate, handleDelete }) => {
 
   const sortItems = (items) => {
     return items.slice().sort((a, b) => {
-      // Received first
-      if (a.received && !b.received) return -1;
-      if (!a.received && b.received) return 1;
-      // Rejected next
+      // 1. Rejected first
       if (a.reject && !b.reject) return -1;
       if (!a.reject && b.reject) return 1;
-      // Refund Process next
-      if (a.refundProcess && !b.refundProcess) return -1;
-      if (!a.refundProcess && b.refundProcess) return 1;
-      // Review Live next
-      if (a.reviewLive && !b.reviewLive) return -1;
-      if (!a.reviewLive && b.reviewLive) return 1;
-      // New products (none of the above true) last
+
+      // 2. Review Live only (reviewLive true, refundProcess false, received false)
+      const aReviewLiveOnly = a.reviewLive && !a.refundProcess && !a.received;
+      const bReviewLiveOnly = b.reviewLive && !b.refundProcess && !b.received;
+      if (aReviewLiveOnly && !bReviewLiveOnly) return -1;
+      if (!aReviewLiveOnly && bReviewLiveOnly) return 1;
+
+      // 3. Review Live + Refund (reviewLive true, refundProcess true, received false)
+      const aReviewLiveRefund = a.reviewLive && a.refundProcess && !a.received;
+      const bReviewLiveRefund = b.reviewLive && b.refundProcess && !b.received;
+      if (aReviewLiveRefund && !bReviewLiveRefund) return -1;
+      if (!aReviewLiveRefund && bReviewLiveRefund) return 1;
+
+      // 4. New products (none of the above flags true)
+      const aNew = !a.reject && !a.reviewLive && !a.refundProcess && !a.received;
+      const bNew = !b.reject && !b.reviewLive && !b.refundProcess && !b.received;
+      if (aNew && !bNew) return -1;
+      if (!aNew && bNew) return 1;
+
+      // 5. Review Live + Refund + Received (all true)
+      const aAllTrue = a.reviewLive && a.refundProcess && a.received;
+      const bAllTrue = b.reviewLive && b.refundProcess && b.received;
+      if (aAllTrue && !bAllTrue) return 1;
+      if (!aAllTrue && bAllTrue) return -1;
+
       return 0;
     });
   };
@@ -145,20 +169,27 @@ const Table = ({ items, handleUpdate, handleDelete }) => {
           </tr>
         </thead>
         <tbody>
-          {sortItems(items).map((item) => {
+          {sortItems(items).map((item, idx) => {
             const isEditing = editingRowId === item.docId;
 
             return (
               <tr
                 key={item.docId}
-                className={`bg-white hover:bg-gray-100 font-mono ${
-                  item.received
-                    ? "bg-slate-500 hover:bg-slate-400 opacity-60"
+                className={`bg-white hover:bg-gray-100 font-mono
+                  ${item.reviewLive && item.refundProcess && item.received
+                    ? "bg-slate-600 hover:bg-slate-500 "
+                    : item.reviewLive && item.refundProcess && !item.received
+                    ? "bg-emerald-300 hover:bg-emerald-200"
+                    : item.received
+                    ? ""
                     : item.reject
                     ? "bg-yellow-400 hover:bg-yellow-300"
                     : ""
-                }`}
+                  }`}
               >
+                <td className="border px-2 text-center font-bold">
+                  {item.serialNumber || idx + 1}
+                </td>
                 <td className="border px-2">
                   {isEditing ? (
                     <input
@@ -312,7 +343,7 @@ const Table = ({ items, handleUpdate, handleDelete }) => {
                       onChange={(e) => onChange("deliveredOn", e.target.value)}
                     />
                   ) : (
-                    item.deliveredOn || ""
+                    formatDate(item.deliveredOn || "")
                   )}
                 </td>
                 <td className="border px-2">
@@ -324,7 +355,7 @@ const Table = ({ items, handleUpdate, handleDelete }) => {
                       onChange={(e) => onChange("reviewedOn", e.target.value)}
                     />
                   ) : (
-                    item.reviewedOn || ""
+                    formatDate(item.reviewedOn || "")
                   )}
                 </td>
                 <td className="border px-2">
@@ -333,12 +364,10 @@ const Table = ({ items, handleUpdate, handleDelete }) => {
                       type="date"
                       className="w-32 border rounded px-1 py-0.5"
                       value={editForm.returnCloseOn || ""}
-                      onChange={(e) =>
-                        onChange("returnCloseOn", e.target.value)
-                      }
+                      onChange={(e) => onChange("returnCloseOn", e.target.value)}
                     />
                   ) : (
-                    item.returnCloseOn || ""
+                    formatDate(item.returnCloseOn || "")
                   )}
                 </td>
                 <td className="border px-2 text-center">
