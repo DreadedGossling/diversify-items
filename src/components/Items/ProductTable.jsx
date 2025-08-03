@@ -52,7 +52,9 @@ const Table = ({ items, handleUpdate, handleDelete }) => {
         const { db } = await import("../../firebase");
         const { collection, getDocs } = await import("firebase/firestore");
         const querySnapshot = await getDocs(collection(db, "reviewers"));
-        setReviewerOptions(querySnapshot.docs.map((doc) => doc.data().reviewerName));
+        setReviewerOptions(
+          querySnapshot.docs.map((doc) => doc.data().reviewerName)
+        );
       } catch (err) {
         setReviewerOptions([]);
       }
@@ -62,7 +64,9 @@ const Table = ({ items, handleUpdate, handleDelete }) => {
         const { db } = await import("../../firebase");
         const { collection, getDocs } = await import("firebase/firestore");
         const querySnapshot = await getDocs(collection(db, "platform"));
-        setPlatformOptions(querySnapshot.docs.map((doc) => doc.data().platformName));
+        setPlatformOptions(
+          querySnapshot.docs.map((doc) => doc.data().platformName)
+        );
       } catch (err) {
         setPlatformOptions([]);
       }
@@ -141,8 +145,10 @@ const Table = ({ items, handleUpdate, handleDelete }) => {
       if (!aReviewLiveRefund && bReviewLiveRefund) return 1;
 
       // 4. New products (none of the above flags true)
-      const aNew = !a.reject && !a.reviewLive && !a.refundProcess && !a.received;
-      const bNew = !b.reject && !b.reviewLive && !b.refundProcess && !b.received;
+      const aNew =
+        !a.reject && !a.reviewLive && !a.refundProcess && !a.received;
+      const bNew =
+        !b.reject && !b.reviewLive && !b.refundProcess && !b.received;
       if (aNew && !bNew) return -1;
       if (!aNew && bNew) return 1;
 
@@ -175,17 +181,17 @@ const Table = ({ items, handleUpdate, handleDelete }) => {
             return (
               <tr
                 key={item.docId}
-                className={`bg-white hover:bg-gray-100 font-mono
-                  ${item.reviewLive && item.refundProcess && item.received
-                    ? "bg-slate-600 hover:bg-slate-500 "
-                    : item.reviewLive && item.refundProcess && !item.received
-                    ? "bg-emerald-300 hover:bg-emerald-200"
-                    : item.received
-                    ? ""
-                    : item.reject
+                className={`font-mono hover:bg-gray-100 ${
+                  item.reviewLive && item.reject
                     ? "bg-yellow-400 hover:bg-yellow-300"
-                    : ""
-                  }`}
+                    : item.reviewLive && item.refundProcess && item.received
+                    ? "bg-slate-700 hover:bg-slate-600"
+                    : item.reviewLive && item.refundProcess
+                    ? "bg-emerald-400 hover:bg-emerald-300"
+                    : item.reviewLive
+                    ? "bg-white hover:bg-gray-100"
+                    : "bg-white hover:bg-gray-100"
+                }`}
               >
                 <td className="border px-2 text-center font-bold">
                   {item.serialNumber || idx + 1}
@@ -364,7 +370,9 @@ const Table = ({ items, handleUpdate, handleDelete }) => {
                       type="date"
                       className="w-32 border rounded px-1 py-0.5"
                       value={editForm.returnCloseOn || ""}
-                      onChange={(e) => onChange("returnCloseOn", e.target.value)}
+                      onChange={(e) =>
+                        onChange("returnCloseOn", e.target.value)
+                      }
                     />
                   ) : (
                     formatDate(item.returnCloseOn || "")
