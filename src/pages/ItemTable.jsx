@@ -61,8 +61,10 @@ const ItemTable = ({ user }) => {
       if (filterStatus !== "All") {
         if (filterStatus === "Review Live")
           filtered = filtered.filter((item) => item.reviewLive);
-        if (filterStatus === "Need Reject") filtered = filtered.filter((item) => item.reject);
-        if (filterStatus === "Refund Process") filtered = filtered.filter((item) => item.refundProcess);
+        if (filterStatus === "Need Reject")
+          filtered = filtered.filter((item) => item.reject);
+        if (filterStatus === "Refund Process")
+          filtered = filtered.filter((item) => item.refundProcess);
       }
       setFilteredItems(filtered);
     } catch (error) {
@@ -77,7 +79,11 @@ const ItemTable = ({ user }) => {
   }, [user, filterUser, filterPaidBy, filterStatus]);
 
   useEffect(() => {
-    if (filterUser === "All" && filterPaidBy === "All" && filterStatus === "All") {
+    if (
+      filterUser === "All" &&
+      filterPaidBy === "All" &&
+      filterStatus === "All"
+    ) {
       setFilteredItems(allItems);
     } else {
       let filtered = allItems;
@@ -88,9 +94,12 @@ const ItemTable = ({ user }) => {
         filtered = filtered.filter((item) => item.paidBy === filterPaidBy);
       }
       if (filterStatus !== "All") {
-        if (filterStatus === "Review Live") filtered = filtered.filter((item) => item.reviewLive);
-        if (filterStatus === "Need Reject") filtered = filtered.filter((item) => item.reject);
-        if (filterStatus === "Refund Process") filtered = filtered.filter((item) => item.refundProcess);
+        if (filterStatus === "Review Live")
+          filtered = filtered.filter((item) => item.reviewLive);
+        if (filterStatus === "Need Reject")
+          filtered = filtered.filter((item) => item.reject);
+        if (filterStatus === "Refund Process")
+          filtered = filtered.filter((item) => item.refundProcess);
       }
       setFilteredItems(filtered);
     }
@@ -139,10 +148,11 @@ const ItemTable = ({ user }) => {
       <div className="flex justify-between items-center mb-4 flex-wrap gap-4">
         <div>
           <h4 className="font-serif font-bold mb-1 text-lg">Filters</h4>
-          <div className="flex items-center space-x-2">
+
+          <div className="flex flex-col sm:flex-row flex-wrap gap-2">
             {/* User Filter */}
-            <>
-              <label htmlFor="userFilter" className="font-medium text-sm">
+            <div className="w-full sm:w-auto flex flex-col">
+              <label htmlFor="userFilter" className="font-medium text-sm mb-1">
                 User:
               </label>
               <select
@@ -158,10 +168,14 @@ const ItemTable = ({ user }) => {
                   </option>
                 ))}
               </select>
-            </>
+            </div>
+
             {/* Paid By Filter */}
-            <>
-              <label htmlFor="paidByFilter" className="font-medium text-sm">
+            <div className="w-full sm:w-auto flex flex-col">
+              <label
+                htmlFor="paidByFilter"
+                className="font-medium text-sm mb-1"
+              >
                 Paid By:
               </label>
               <select
@@ -177,10 +191,14 @@ const ItemTable = ({ user }) => {
                   </option>
                 ))}
               </select>
-            </>
+            </div>
+
             {/* Status Filter */}
-            <>
-              <label htmlFor="statusFilter" className="font-medium text-sm">
+            <div className="w-full sm:w-auto flex flex-col">
+              <label
+                htmlFor="statusFilter"
+                className="font-medium text-sm mb-1"
+              >
                 Status:
               </label>
               <select
@@ -194,12 +212,15 @@ const ItemTable = ({ user }) => {
                 <option value="Need Reject">Need Reject</option>
                 <option value="Refund Process">Refund Process</option>
               </select>
-            </>
+            </div>
           </div>
         </div>
 
         <button
-          className="flex items-center bg-green-600 shadow-sm shadow-slate-400 hover:bg-green-600 hover:shadow-md hover:shadow-slate-400  font-bold text-white font-serif px-3 py-1 rounded"
+          className="mt-36 sm:mt-10 flex items-center bg-green-600 shadow-sm
+                   shadow-slate-400 hover:bg-green-600 hover:shadow-md
+                  hover:shadow-slate-400 font-bold text-white
+                    font-serif px-3 py-1 rounded"
           onClick={() => setShowAdd((s) => !s)}
         >
           <AiOutlinePlus className="mr-1" /> Add Item

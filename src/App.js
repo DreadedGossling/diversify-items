@@ -11,7 +11,7 @@ import { AiFillProduct } from "react-icons/ai";
 export default function App() {
   const [isRegister, setIsRegister] = useState(false);
   const [user, setUser] = useState(null);
-  const [view, setView] = useState("items"); // add view state
+  const [view, setView] = useState("items");
 
   const auth = getAuth();
 
@@ -32,7 +32,7 @@ export default function App() {
 
   return (
     <div>
-      <header className="flex justify-between items-center p-4 bg-blue-600 text-white">
+      <header className="min-w-[311px] flex justify-between items-center p-4 bg-blue-600 text-white">
         <h1 className="text-xl font-bold font-serif">Diversify Item Manager</h1>
         <p className="capitalize">Hello, {user.displayName || (user.email ? user.email.replace(/@itemapp\.com$/, "") : "")}</p>
         <div className="flex flex-col sm:flex-row gap-2">
