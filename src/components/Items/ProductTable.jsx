@@ -1,33 +1,11 @@
 import { useState, useEffect } from "react";
 
-// Helper to format yyyy-mm-dd to dd-mm-yyyy
 const formatDate = (dateStr) => {
   if (!dateStr) return "";
   const [year, month, day] = dateStr.split("-");
   if (!year || !month || !day) return dateStr;
   return `${day}-${month}-${year}`;
 };
-
-const tableFields = [
-  "S.No.",
-  "Product Name",
-  "Order ID",
-  "Product Code",
-  "User Id",
-  "Platform",
-  "Reviewer Name",
-  "Amount Paid",
-  "Paid By",
-  "Refund Amount",
-  "Delivered On",
-  "Reviewed On",
-  "Return Close On",
-  "Review Live",
-  "Need Reject",
-  "Refund Process",
-  "Received",
-  "Actions",
-];
 
 const Table = ({ items, handleUpdate, handleDelete }) => {
   const [editingRowId, setEditingRowId] = useState(null);
@@ -167,17 +145,51 @@ const Table = ({ items, handleUpdate, handleDelete }) => {
       <table className="min-w-full border text-sm">
         <thead>
           <tr>
-            {tableFields.map((f) => (
-              <th key={f} className="border px-2 py-1 bg-blue-200 font-serif">
-                {f}
-              </th>
-            ))}
+            <th className="border px-2 py-1 bg-blue-200 font-serif">S.No.</th>
+            <th className="border px-2 py-1 bg-blue-200 font-serif">
+              Product Code
+            </th>
+            <th className="border px-2 py-1 bg-blue-200 font-serif min-w-[180px]">
+              <div className="flex flex-col">
+                <div className="pb-1">Product Name / Order Id</div>
+                <div className="border-t border-slate-200 my-0.5" />
+                <div className="pt-1">Platform / Reviewer Name</div>
+              </div>
+            </th>
+            <th className="border px-2 py-1 bg-blue-200 font-serif">
+              Amount Paid
+            </th>
+            <th className="border px-2 py-1 bg-blue-200 font-serif">Paid By</th>
+            <th className="border px-2 py-1 bg-blue-200 font-serif">
+              Refund Amount
+            </th>
+            <th className="border px-2 py-1 bg-blue-200 font-serif">
+              Delivered On
+            </th>
+            <th className="border px-2 py-1 bg-blue-200 font-serif">
+              Reviewed On
+            </th>
+            <th className="border px-2 py-1 bg-blue-200 font-serif">
+              Return Close On
+            </th>
+            <th className="border px-2 py-1 bg-blue-200 font-serif">
+              Review Live
+            </th>
+            <th className="border px-2 py-1 bg-blue-200 font-serif">
+              Need Reject
+            </th>
+            <th className="border px-2 py-1 bg-blue-200 font-serif">
+              Refund Processed
+            </th>
+            <th className="border px-2 py-1 bg-blue-200 font-serif">
+              Received
+            </th>
+            <th className="border px-2 py-1 bg-blue-200 font-serif">Actions</th>
           </tr>
         </thead>
         <tbody>
           {sortItems(items).map((item, idx) => {
             const isEditing = editingRowId === item.docId;
-
             return (
               <tr
                 key={item.docId}
@@ -185,41 +197,20 @@ const Table = ({ items, handleUpdate, handleDelete }) => {
                   item.reviewLive && item.reject
                     ? "bg-yellow-400 hover:bg-yellow-300"
                     : item.reviewLive && item.refundProcess && item.received
-                    ? "bg-slate-700 hover:bg-slate-600"
+                    ? "bg-slate-500 hover:bg-slate-600"
                     : item.reviewLive && item.refundProcess
-                    ? "bg-emerald-400 hover:bg-emerald-300"
+                    ? "bg-emerald-400 hover:bg-emerald-200"
                     : item.reviewLive
                     ? "bg-white hover:bg-gray-100"
                     : "bg-white hover:bg-gray-100"
                 }`}
               >
+                {/* S.No. */}
                 <td className="border px-2 text-center font-bold">
                   {item.serialNumber || idx + 1}
                 </td>
-                <td className="border px-2">
-                  {isEditing ? (
-                    <input
-                      type="text"
-                      className="w-32 border rounded px-1 py-0.5"
-                      value={editForm.productName}
-                      onChange={(e) => onChange("productName", e.target.value)}
-                    />
-                  ) : (
-                    item.productName
-                  )}
-                </td>
-                <td className="border px-2">
-                  {isEditing ? (
-                    <input
-                      type="text"
-                      className="w-32 border rounded px-1 py-0.5"
-                      value={editForm.orderId}
-                      onChange={(e) => onChange("orderId", e.target.value)}
-                    />
-                  ) : (
-                    item.orderId
-                  )}
-                </td>
+
+                {/* Product Code */}
                 <td className="border px-2">
                   {isEditing ? (
                     <input
@@ -232,66 +223,69 @@ const Table = ({ items, handleUpdate, handleDelete }) => {
                     item.productCode
                   )}
                 </td>
+
+                {/* Combined Cell: Product Name / Order Id / Platform / Reviewer Name */}
                 <td className="border px-2">
                   {isEditing ? (
-                    <select
-                      className="w-32 border rounded px-1 py-0.5"
-                      value={editForm.userId}
-                      onChange={(e) => onChange("userId", e.target.value)}
-                    >
-                      <option value="" disabled>
-                        Select User Id
-                      </option>
-                      {userIdOptions.map((uid) => (
-                        <option key={uid} value={uid}>
-                          {uid}
+                    <div className="flex flex-col space-y-1">
+                      <input
+                        type="text"
+                        placeholder="Product Name"
+                        className="border rounded px-1 py-0.5"
+                        value={editForm.productName}
+                        onChange={(e) =>
+                          onChange("productName", e.target.value)
+                        }
+                      />
+                      <input
+                        type="text"
+                        placeholder="Order ID"
+                        className="border rounded px-1 py-0.5"
+                        value={editForm.orderId}
+                        onChange={(e) => onChange("orderId", e.target.value)}
+                      />
+                      <select
+                        className="border rounded px-1 py-0.5"
+                        value={editForm.platform}
+                        onChange={(e) => onChange("platform", e.target.value)}
+                      >
+                        <option value="" disabled>
+                          Select Platform
                         </option>
-                      ))}
-                    </select>
+                        {platformOptions.map((platform) => (
+                          <option key={platform} value={platform}>
+                            {platform}
+                          </option>
+                        ))}
+                      </select>
+                      <select
+                        className="border rounded px-1 py-0.5"
+                        value={editForm.reviewerName}
+                        onChange={(e) =>
+                          onChange("reviewerName", e.target.value)
+                        }
+                      >
+                        <option value="" disabled>
+                          Select Reviewer
+                        </option>
+                        {reviewerOptions.map((reviewer) => (
+                          <option key={reviewer} value={reviewer}>
+                            {reviewer}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                   ) : (
-                    item.userId
+                    <div className="flex flex-col space-y-1 font-mono text-sm">
+                      <span>{item.productName}</span>
+                      <span>{item.orderId}</span>
+                      <span>{item.platform}</span>
+                      <span>{item.reviewerName}</span>
+                    </div>
                   )}
                 </td>
-                <td className="border px-2">
-                  {isEditing ? (
-                    <select
-                      className="w-32 border rounded px-1 py-0.5"
-                      value={editForm.platform}
-                      onChange={(e) => onChange("platform", e.target.value)}
-                    >
-                      <option value="" disabled>
-                        Select Platform
-                      </option>
-                      {platformOptions.map((platform) => (
-                        <option key={platform} value={platform}>
-                          {platform}
-                        </option>
-                      ))}
-                    </select>
-                  ) : (
-                    item.platform
-                  )}
-                </td>
-                <td className="border px-2">
-                  {isEditing ? (
-                    <select
-                      className="w-32 border rounded px-1 py-0.5"
-                      value={editForm.reviewerName}
-                      onChange={(e) => onChange("reviewerName", e.target.value)}
-                    >
-                      <option value="" disabled>
-                        Select Reviewer Name
-                      </option>
-                      {reviewerOptions.map((reviewer) => (
-                        <option key={reviewer} value={reviewer}>
-                          {reviewer}
-                        </option>
-                      ))}
-                    </select>
-                  ) : (
-                    item.reviewerName
-                  )}
-                </td>
+
+                {/* Amount Paid */}
                 <td className="border px-2">
                   {isEditing ? (
                     <input
@@ -306,10 +300,12 @@ const Table = ({ items, handleUpdate, handleDelete }) => {
                     item.amountPaid
                   )}
                 </td>
+
+                {/* Paid By */}
                 <td className="border px-2">
                   {isEditing ? (
                     <select
-                      className="w-32 border rounded px-2 py-0.5"
+                      className="w-32 border rounded px-1 py-0.5"
                       value={editForm.paidBy}
                       onChange={(e) => onChange("paidBy", e.target.value)}
                     >
@@ -326,6 +322,8 @@ const Table = ({ items, handleUpdate, handleDelete }) => {
                     item.paidBy
                   )}
                 </td>
+
+                {/* Refund Amount */}
                 <td className="border px-2">
                   {isEditing ? (
                     <input
@@ -340,6 +338,8 @@ const Table = ({ items, handleUpdate, handleDelete }) => {
                     item.refundAmount
                   )}
                 </td>
+
+                {/* Delivered On */}
                 <td className="border px-2">
                   {isEditing ? (
                     <input
@@ -352,6 +352,8 @@ const Table = ({ items, handleUpdate, handleDelete }) => {
                     formatDate(item.deliveredOn || "")
                   )}
                 </td>
+
+                {/* Reviewed On */}
                 <td className="border px-2">
                   {isEditing ? (
                     <input
@@ -364,20 +366,68 @@ const Table = ({ items, handleUpdate, handleDelete }) => {
                     formatDate(item.reviewedOn || "")
                   )}
                 </td>
-                <td className="border px-2">
+
+                {/* Return Close On */}
+                <td
+                  className={`border px-2 ${
+                    isEditing
+                      ? ""
+                      : item.returnCloseOn === "No Return"
+                      ? "bg-red-200"
+                      : ""
+                  }`}
+                >
                   {isEditing ? (
-                    <input
-                      type="date"
-                      className="w-32 border rounded px-1 py-0.5"
-                      value={editForm.returnCloseOn || ""}
-                      onChange={(e) =>
-                        onChange("returnCloseOn", e.target.value)
-                      }
-                    />
+                    <>
+                      <select
+                        className="w-32 border rounded px-1 py-0.5 mb-1"
+                        value={
+                          !editForm.returnCloseOn ||
+                          editForm.returnCloseOn === "-"
+                            ? "-"
+                            : editForm.returnCloseOn === "No Return"
+                            ? "No Return"
+                            : "Pick Date"
+                        }
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (val === "-") {
+                            onChange("returnCloseOn", "-");
+                          } else if (val === "No Return") {
+                            onChange("returnCloseOn", "No Return");
+                          } else {
+                            onChange("returnCloseOn", "");
+                          }
+                        }}
+                      >
+                        <option value="-">-</option>
+                        <option value="No Return">No Return</option>
+                        <option value="Pick Date">Pick Date</option>
+                      </select>
+                      {editForm.returnCloseOn !== "No Return" &&
+                        editForm.returnCloseOn !== "-" && (
+                          <input
+                            type="date"
+                            className="w-32 border rounded px-1 py-0.5"
+                            value={editForm.returnCloseOn || ""}
+                            onChange={(e) =>
+                              onChange("returnCloseOn", e.target.value)
+                            }
+                          />
+                        )}
+                    </>
+                  ) : item.returnCloseOn === "No Return" ? (
+                    <span className="text-gray-600 font-semibold">
+                      No Return
+                    </span>
+                  ) : item.returnCloseOn === "-" || !item.returnCloseOn ? (
+                    <span>-</span>
                   ) : (
-                    formatDate(item.returnCloseOn || "")
+                    formatDate(item.returnCloseOn)
                   )}
                 </td>
+
+                {/* Review Live */}
                 <td className="border px-2 text-center">
                   {isEditing ? (
                     <input
@@ -393,6 +443,8 @@ const Table = ({ items, handleUpdate, handleDelete }) => {
                     "❌"
                   )}
                 </td>
+
+                {/* Need Reject */}
                 <td className="border px-2 text-center">
                   {isEditing ? (
                     <input
@@ -408,6 +460,8 @@ const Table = ({ items, handleUpdate, handleDelete }) => {
                     "❌"
                   )}
                 </td>
+
+                {/* Refund Processed */}
                 <td className="border px-2 text-center">
                   {isEditing ? (
                     <input
@@ -423,6 +477,8 @@ const Table = ({ items, handleUpdate, handleDelete }) => {
                     "❌"
                   )}
                 </td>
+
+                {/* Received */}
                 <td className="border px-2 text-center">
                   {isEditing ? (
                     <input
@@ -438,36 +494,42 @@ const Table = ({ items, handleUpdate, handleDelete }) => {
                     "❌"
                   )}
                 </td>
-                <td className="border px-6 py-1 text-center space-y-1">
+
+                {/* Actions */}
+                <td className="border px-6 text-center">
                   {isEditing ? (
                     <>
-                      <button
-                        onClick={onSave}
-                        className="text-white px-2 py-1 w-16 bg-green-600 hover:bg-green-700"
-                      >
-                        Update
-                      </button>
-                      <button
-                        onClick={cancelEdit}
-                        className="text-white px-2 py-1 w-16 bg-gray-600 hover:bg-gray-700 ml-2"
-                      >
-                        Cancel
-                      </button>
+                      <div>
+                        <button
+                          onClick={onSave}
+                          className="text-white px-2 py-1 w-16 bg-green-600 hover:bg-green-700"
+                        >
+                          Update
+                        </button>
+                        <button
+                          onClick={cancelEdit}
+                          className="text-white px-2 py-1 w-16 bg-gray-600 hover:bg-gray-700 ml-2"
+                        >
+                          Cancel
+                        </button>
+                      </div>
                     </>
                   ) : (
                     <>
-                      <button
-                        onClick={() => startEdit(item)}
-                        className="text-white px-2 py-1 w-16 bg-cyan-600 hover:bg-cyan-700"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDelete(item.docId)}
-                        className="text-white px-2 py-1 w-16 bg-red-600 hover:bg-red-700 ml-2"
-                      >
-                        Delete
-                      </button>
+                      <div className="space-y-1 md:space-y-0 md:flex md:justify-center md:space-x-2">
+                        <button
+                          onClick={() => startEdit(item)}
+                          className="text-white ml-2 px-2 py-1 w-16 bg-cyan-600 hover:bg-cyan-700"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDelete(item.docId)}
+                          className="text-white px-2 py-1 w-16 bg-red-600 hover:bg-red-700 ml-2"
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </>
                   )}
                 </td>

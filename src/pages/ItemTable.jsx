@@ -7,10 +7,9 @@ import {
   doc,
   deleteDoc,
 } from "firebase/firestore";
-import { AiOutlinePlus } from "react-icons/ai";
+import { AiOutlinePlus, AiFillProduct } from "react-icons/ai";
 import AddProductForm from "../components/Items/AddForm"; // add form (new items only)
 import ProductTable from "../components/Items/ProductTable"; // inline edit table
-import { AiFillProduct } from "react-icons/ai";
 
 const emptyItem = {
   productName: "",
@@ -40,6 +39,7 @@ const ItemTable = ({ user }) => {
   const [filterPaidBy, setFilterPaidBy] = useState("All");
   const [filterStatus, setFilterStatus] = useState("All");
   const [reviewerPaidByOptions, setReviewerPaidByOptions] = useState([]);
+  const [showPaid, setShowPaid] = useState(false); // NEW: toggles showing only paid items
 
   const fetchItems = async () => {
     try {
@@ -49,23 +49,52 @@ const ItemTable = ({ user }) => {
         id: doc.id,
         ...doc.data(),
       }));
-
       setAllItems(fetchedItems);
+
       let filtered = fetchedItems;
-      if (filterUser !== "All") {
-        filtered = filtered.filter((item) => item.userId === filterUser);
+
+      if (showPaid) {
+        // Show only paid items (reviewLive + refundProcess + received all true)
+        filtered = filtered.filter(
+          (item) => item.reviewLive && item.refundProcess && item.received
+        );
+
+        // Apply filters within paid items
+        if (filterUser !== "All") {
+          filtered = filtered.filter((item) => item.userId === filterUser);
+        }
+        if (filterPaidBy !== "All") {
+          filtered = filtered.filter((item) => item.paidBy === filterPaidBy);
+        }
+        if (filterStatus !== "All") {
+          if (filterStatus === "Review Live")
+            filtered = filtered.filter((item) => item.reviewLive);
+          if (filterStatus === "Need Reject")
+            filtered = filtered.filter((item) => item.reject);
+          if (filterStatus === "Refund Process")
+            filtered = filtered.filter((item) => item.refundProcess);
+        }
+      } else {
+        // Exclude all received=true (paid) items in normal mode
+        filtered = filtered.filter((item) => !item.received);
+
+        // Apply normal filters
+        if (filterUser !== "All") {
+          filtered = filtered.filter((item) => item.userId === filterUser);
+        }
+        if (filterPaidBy !== "All") {
+          filtered = filtered.filter((item) => item.paidBy === filterPaidBy);
+        }
+        if (filterStatus !== "All") {
+          if (filterStatus === "Review Live")
+            filtered = filtered.filter((item) => item.reviewLive);
+          if (filterStatus === "Need Reject")
+            filtered = filtered.filter((item) => item.reject);
+          if (filterStatus === "Refund Process")
+            filtered = filtered.filter((item) => item.refundProcess);
+        }
       }
-      if (filterPaidBy !== "All") {
-        filtered = filtered.filter((item) => item.paidBy === filterPaidBy);
-      }
-      if (filterStatus !== "All") {
-        if (filterStatus === "Review Live")
-          filtered = filtered.filter((item) => item.reviewLive);
-        if (filterStatus === "Need Reject")
-          filtered = filtered.filter((item) => item.reject);
-        if (filterStatus === "Refund Process")
-          filtered = filtered.filter((item) => item.refundProcess);
-      }
+
       setFilteredItems(filtered);
     } catch (error) {
       console.error("Error fetching items:", error);
@@ -76,17 +105,32 @@ const ItemTable = ({ user }) => {
 
   useEffect(() => {
     fetchItems();
-  }, [user, filterUser, filterPaidBy, filterStatus]);
+  }, [user, filterUser, filterPaidBy, filterStatus, showPaid]);
 
   useEffect(() => {
-    if (
+    if (showPaid) {
+      setFilteredItems(
+        allItems.filter(
+          (item) =>
+            item.received &&
+            item.reviewLive &&
+            item.refundProcess &&
+            (filterUser === "All" || item.userId === filterUser) &&
+            (filterPaidBy === "All" || item.paidBy === filterPaidBy) &&
+            (filterStatus === "All" ||
+              (filterStatus === "Review Live" && item.reviewLive) ||
+              (filterStatus === "Need Reject" && item.reject) ||
+              (filterStatus === "Refund Process" && item.refundProcess))
+        )
+      );
+    } else if (
       filterUser === "All" &&
       filterPaidBy === "All" &&
       filterStatus === "All"
     ) {
-      setFilteredItems(allItems);
+      setFilteredItems(allItems.filter((item) => !item.received));
     } else {
-      let filtered = allItems;
+      let filtered = allItems.filter((item) => !item.received);
       if (filterUser !== "All") {
         filtered = filtered.filter((item) => item.userId === filterUser);
       }
@@ -103,7 +147,7 @@ const ItemTable = ({ user }) => {
       }
       setFilteredItems(filtered);
     }
-  }, [filterUser, filterPaidBy, filterStatus, allItems]);
+  }, [filterUser, filterPaidBy, filterStatus, allItems, showPaid]);
 
   const uniqueUserIds = Array.from(
     new Set(allItems.map((item) => item.userId).filter(Boolean))
@@ -135,10 +179,10 @@ const ItemTable = ({ user }) => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this item?")) {
       try {
-        await updateDoc(doc(db, "items", id), { isDeleted: true });
-        fetchItems();
+        await deleteDoc(doc(db, "items", id)); // Deletes the entire document
+        fetchItems(); // Refresh your list after deletion
       } catch (error) {
-        console.error("Error setting isDeleted flag:", error);
+        console.error("Error deleting document:", error);
       }
     }
   };
@@ -150,7 +194,6 @@ const ItemTable = ({ user }) => {
           <h4 className="font-serif font-bold mb-1 text-lg">Filters</h4>
 
           <div className="flex flex-col sm:flex-row flex-wrap gap-2">
-            {/* User Filter */}
             <div className="w-full sm:w-auto flex flex-col">
               <label htmlFor="userFilter" className="font-medium text-sm mb-1">
                 User:
@@ -159,7 +202,7 @@ const ItemTable = ({ user }) => {
                 id="userFilter"
                 value={filterUser}
                 onChange={(e) => setFilterUser(e.target.value)}
-                className="border border-cyan-400 rounded text-sm"
+                className="border border-cyan-400 rounded text-sm sm:w-24 md:w-32 md:h-8"
               >
                 <option value="All">All</option>
                 {uniqueUserIds.map((uid) => (
@@ -170,7 +213,6 @@ const ItemTable = ({ user }) => {
               </select>
             </div>
 
-            {/* Paid By Filter */}
             <div className="w-full sm:w-auto flex flex-col">
               <label
                 htmlFor="paidByFilter"
@@ -182,7 +224,7 @@ const ItemTable = ({ user }) => {
                 id="paidByFilter"
                 value={filterPaidBy}
                 onChange={(e) => setFilterPaidBy(e.target.value)}
-                className="border border-cyan-400 rounded text-sm"
+                className="border border-cyan-400 rounded text-sm md:w-56 md:h-8"
               >
                 <option value="All">All</option>
                 {reviewerPaidByOptions.map((pb) => (
@@ -193,7 +235,6 @@ const ItemTable = ({ user }) => {
               </select>
             </div>
 
-            {/* Status Filter */}
             <div className="w-full sm:w-auto flex flex-col">
               <label
                 htmlFor="statusFilter"
@@ -205,7 +246,7 @@ const ItemTable = ({ user }) => {
                 id="statusFilter"
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="border border-cyan-400 rounded text-sm"
+                className="border border-cyan-400 rounded text-sm md:w-44 md:h-8"
               >
                 <option value="All">All</option>
                 <option value="Review Live">Review Live</option>
@@ -217,17 +258,17 @@ const ItemTable = ({ user }) => {
         </div>
 
         <button
-          className="mt-36 sm:mt-10 flex items-center bg-green-600 shadow-sm
-                   shadow-slate-400 hover:bg-green-600 hover:shadow-md
-                  hover:shadow-slate-400 font-bold text-white
-                    font-serif px-3 py-1 rounded"
+          className="mt-36 sm:mt-12 md:h-10 md:w-36 lg:w-44 flex items-center bg-green-600
+                     shadow-sm shadow-slate-400 hover:bg-green-600 hover:shadow-md
+                   hover:shadow-slate-400 font-bold text-white justify-center font-serif
+                     px-3 py-1 rounded"
           onClick={() => setShowAdd((s) => !s)}
         >
           <AiOutlinePlus className="mr-1" /> Add Item
         </button>
       </div>
 
-      {showAdd && (
+      {showAdd && !showPaid && (
         <AddProductForm
           emptyItem={emptyItem}
           setShowAdd={setShowAdd}
@@ -241,8 +282,10 @@ const ItemTable = ({ user }) => {
       <div className="overflow-x-auto">
         {filteredItems.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-gray-500">
-            <AiFillProduct />
-            <span className="text-lg font-semibold">No Product Found</span>
+            <AiFillProduct className="text-4xl mb-1" />
+            <span className="text-lg font-semibold">
+              {showPaid ? "No Paid Items Found" : "No Product Found"}
+            </span>
           </div>
         ) : (
           <ProductTable
@@ -252,6 +295,15 @@ const ItemTable = ({ user }) => {
           />
         )}
       </div>
+
+      <button
+        className="text-white bg-orange-600 px-4 py-2 rounded-md font-serif font-semibold mb-4
+                 hover:bg-orange-700 transition-colors duration-300 shadow-sm shadow-slate-400
+                   hover:shadow-md hover:shadow-slate-400 my-8 w-32 float-right"
+        onClick={() => setShowPaid((prev) => !prev)}
+      >
+        {showPaid ? "Active Items" : "Paid Items"}
+      </button>
     </div>
   );
 };
