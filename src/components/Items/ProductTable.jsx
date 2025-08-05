@@ -28,7 +28,13 @@ function getDaysSinceDate(dateStr) {
   return Math.floor(diffTime / (1000 * 60 * 60 * 24)); // convert to whole days
 }
 
-const Table = ({ items, handleUpdate, handleDelete }) => {
+const Table = ({
+  items,
+  itemsPerPage,
+  currentPage,
+  handleUpdate,
+  handleDelete,
+}) => {
   const [editingRowId, setEditingRowId] = useState(null);
   const [editForm, setEditForm] = useState({});
   const [userIdOptions, setUserIdOptions] = useState([]);
@@ -217,26 +223,26 @@ const Table = ({ items, handleUpdate, handleDelete }) => {
 
     if (daysLeft > 0) {
       return (
-        <span className="text-center space-y-2">
-          <p>
+        <span className="text-center space-y-0.5">
+          <p className="-mt-5">
             {daysLeft} {daysLeft === 1 ? "Day" : "Days"} Left
           </p>
-          <p>{formatDate(dateStr)}</p>
+          <p className="-mt-5">{formatDate(dateStr)}</p>
         </span>
       );
     } else if (daysLeft === 0) {
       return (
-        <span className="text-red-600 font-semibold text-center space-y-2">
-          <p>0 Day left</p>
-          <p>{formatDate(dateStr)}</p>
+        <span className="text-red-600 font-semibold text-center space-y-0.5">
+          <p className="-mt-5">0 Day left</p>
+          <p className="-mt-5">{formatDate(dateStr)}</p>
         </span>
       );
     } else {
       // daysLeft < 0 means date passed
       return (
-        <span className="text-red-600 font-semibold text-center space-y-2">
-          <p> Over</p>
-          <p>{formatDate(dateStr)}</p>
+        <span className="text-red-600 font-semibold text-center space-y-0.5">
+          <p className="-mt-5"> Over</p>
+          <p className="-mt-5">{formatDate(dateStr)}</p>
         </span>
       );
     }
@@ -299,52 +305,58 @@ const Table = ({ items, handleUpdate, handleDelete }) => {
       <table className="min-w-full border text-sm">
         <thead>
           <tr>
-            <th className="border px-2 py-1 bg-blue-200 font-serif">S.No.</th>
-            <th className="border px-2 py-1 bg-blue-200 font-serif">
+            <th className=" border px-2 py-1 bg-blue-200 font-serif">S.No.</th>
+            <th className=" border px-2 py-1 bg-blue-200 font-serif">
               Product Code
             </th>
-            <th className="border px-2 py-1 bg-blue-200 font-serif min-w-[180px]">
+            <th className=" border px-2 py-1 bg-blue-200 font-serif min-w-[180px]">
               <div className="flex flex-col">
                 <div className="pb-1">Product Name / Order Id</div>
                 <div className="border-t border-slate-200 my-0.5" />
                 <div className="pt-1">Platform / Reviewer Name</div>
               </div>
             </th>
-            <th className="border px-2 py-1 bg-blue-200 font-serif">
+            <th className=" border px-2 py-1 bg-blue-200 font-serif">
               Amount Paid
             </th>
-            <th className="border px-2 py-1 bg-blue-200 font-serif">Paid By</th>
-            <th className="border px-2 py-1 bg-blue-200 font-serif">
-              Refund Amount
-            </th>
-            <th className="border px-2 py-1 bg-blue-200 font-serif">
-              Delivered On
-            </th>
-            <th className="border px-2 py-1 bg-blue-200 font-serif">
-              Reviewed On
-            </th>
-            <th className="border px-2 py-1 bg-blue-200 font-serif min-w-[125px]">
-              Return Closes On
-            </th>
-            <th className="border px-2 py-1 bg-blue-200 font-serif">
-              Review Live
-            </th>
-            <th className="border px-2 py-1 bg-blue-200 font-serif">
-              Need Reject
+            <th className=" border px-2 py-1 bg-blue-200 font-serif">
+              Paid By
             </th>
             <th className="border px-2 py-1 bg-blue-200 font-serif min-w-[125px]">
               Ordered On
             </th>
-            <th className="border px-2 py-1 bg-blue-200 font-serif">
-              Form Submitted
+            <th className=" border px-2 py-1 bg-blue-200 font-serif">
+              Refund Amount
             </th>
-            <th className="border px-2 py-1 bg-blue-200 font-serif">
+            <th className=" border px-2 py-1 bg-blue-200 font-serif">
+              Delivered On
+            </th>
+            <th className=" border px-2 py-1 bg-blue-200 font-serif min-w-[160px]">
+              <div className="flex flex-col">
+                <div className="pb-1">Reviewed On</div>
+                <div className="border-t border-slate-200 my-0.5" />
+                <div className="pt-1">Review Live</div>
+              </div>
+            </th>
+            <th className=" border px-2 py-1 bg-blue-200 font-serif min-w-[160px]">
+              <div className="flex flex-col">
+                <div className="pb-1">Return Closes On</div>
+                <div className="border-t border-slate-200 my-0.5" />
+                <div className="pt-1">Filled Refund Form</div>
+              </div>
+            </th>
+            <th className=" border px-2 py-1 bg-blue-200 font-serif">
+              Need Reject
+            </th>
+            <th className=" border px-2 py-1 bg-blue-200 font-serif">
               Refund Processed
             </th>
-            <th className="border px-2 py-1 bg-blue-200 font-serif">
+            <th className=" border px-2 py-1 bg-blue-200 font-serif">
               Received
             </th>
-            <th className="border px-2 py-1 bg-blue-200 font-serif">Actions</th>
+            <th className=" border px-2 py-1 bg-blue-200 font-serif">
+              Actions
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -386,7 +398,9 @@ const Table = ({ items, handleUpdate, handleDelete }) => {
               >
                 {/* S.No. */}
                 <td className="border px-2 text-center font-bold">
-                  {item.serialNumber || idx + 1}
+                  {/* {item.serialNumber || idx + 1} */}
+                  {item.serialNumber ||
+                    itemsPerPage * (currentPage - 1) + idx + 1}
                 </td>
 
                 {/* Product Code */}
@@ -404,7 +418,7 @@ const Table = ({ items, handleUpdate, handleDelete }) => {
                 </td>
 
                 {/* Combined Cell: Product Name / Order Id / Platform / Reviewer Name */}
-                <td className="border px-2 py-1">
+                <td className="border px-2 py-1 text-center">
                   {isEditing ? (
                     <div className="flex flex-col space-y-1">
                       <input
@@ -502,6 +516,20 @@ const Table = ({ items, handleUpdate, handleDelete }) => {
                   )}
                 </td>
 
+                {/* Ordered On */}
+                <td className="border px-2 text-center">
+                  {isEditing ? (
+                    <input
+                      type="date"
+                      className="w-32 border rounded px-1 py-0.5"
+                      value={editForm.orderedOn || ""}
+                      onChange={(e) => onChange("orderedOn", e.target.value)}
+                    />
+                  ) : (
+                    <OrderedDateCountdown orderDate={item.orderedOn} />
+                  )}
+                </td>
+
                 {/* Refund Amount */}
                 <td className="border px-2 text-center">
                   {isEditing ? (
@@ -532,21 +560,38 @@ const Table = ({ items, handleUpdate, handleDelete }) => {
                   )}
                 </td>
 
-                {/* Reviewed On */}
-                <td className="border px-2 min-w-[105px] text-center">
+                {/* Reviewed On & Review Live */}
+                <td className="border px-2 text-center">
                   {isEditing ? (
-                    <input
-                      type="date"
-                      className="w-32 border rounded px-1 py-0.5"
-                      value={editForm.reviewedOn || ""}
-                      onChange={(e) => onChange("reviewedOn", e.target.value)}
-                    />
+                    <div className="flex flex-col space-y-2 items-center">
+                      <input
+                        type="date"
+                        className="w-32 border rounded px-1 py-0.5"
+                        value={editForm.reviewedOn || ""}
+                        onChange={(e) => onChange("reviewedOn", e.target.value)}
+                      />
+
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={!!editForm.reviewLive}
+                          onChange={(e) =>
+                            onCheckboxChange("reviewLive", e.target.checked)
+                          }
+                        />
+                        Review Live
+                      </label>
+                    </div>
                   ) : (
-                    formatDate(item.reviewedOn || "")
+                    <div className="flex flex-col space-y-2 items-center">
+                      <p>{formatDate(item.reviewedOn || "")}</p>
+                      <hr className="border-1 w-full" />
+                      <p>{item.reviewLive ? "✅" : "❌"}</p>
+                    </div>
                   )}
                 </td>
 
-                {/* Return Close On */}
+                {/* Return Closes On & Refund form filled */}
                 <td
                   className={`border px-2 ${
                     isEditing
@@ -557,9 +602,9 @@ const Table = ({ items, handleUpdate, handleDelete }) => {
                   }`}
                 >
                   {isEditing ? (
-                    <>
+                    <div className="flex flex-col space-y-2 items-center">
                       <select
-                        className="w-32 border rounded px-1 py-0.5 mb-1"
+                        className="w-32 border rounded px-1 py-0.5"
                         value={
                           !editForm.returnCloseOn ||
                           editForm.returnCloseOn === "-"
@@ -594,32 +639,39 @@ const Table = ({ items, handleUpdate, handleDelete }) => {
                             }
                           />
                         )}
-                    </>
-                  ) : item.returnCloseOn === "No Return" ? (
-                    <span className="text-red-600 font-semibold">
-                      No Return
-                    </span>
-                  ) : item.returnCloseOn === "-" || !item.returnCloseOn ? (
-                    <span>-</span>
-                  ) : (
-                    <ReturnClosingCell dateStr={item.returnCloseOn} />
-                  )}
-                </td>
 
-                {/* Review Live */}
-                <td className="border px-2 text-center">
-                  {isEditing ? (
-                    <input
-                      type="checkbox"
-                      checked={!!editForm.reviewLive}
-                      onChange={(e) =>
-                        onCheckboxChange("reviewLive", e.target.checked)
-                      }
-                    />
-                  ) : item.reviewLive ? (
-                    "✅"
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={!!editForm.refundSubmitted}
+                          onChange={(e) =>
+                            onCheckboxChange(
+                              "refundSubmitted",
+                              e.target.checked
+                            )
+                          }
+                        />
+                        Refund Form
+                      </label>
+                    </div>
+                  ) : item.returnCloseOn === "No Return" ? (
+                    <div className="text-red-600 font-semibold text-center space-y-2">
+                      <p>No Return</p>
+                      <hr className="border-1 w-full" />
+                      <p>{item.refundSubmitted ? "✅" : "❌"}</p>
+                    </div>
+                  ) : item.returnCloseOn === "-" || !item.returnCloseOn ? (
+                    <div className="text-center space-y-2">
+                      <p>-</p>
+                      <hr className="border-1 w-full" />
+                      <p>{item.refundSubmitted ? "✅" : "❌"}</p>
+                    </div>
                   ) : (
-                    "❌"
+                    <div className="text-center space-y-2 h-full">
+                      <ReturnClosingCell dateStr={item.returnCloseOn} />
+                      <hr className="border-1 w-full" />
+                      <p>{item.refundSubmitted ? "✅" : "❌"}</p>
+                    </div>
                   )}
                 </td>
 
@@ -634,37 +686,6 @@ const Table = ({ items, handleUpdate, handleDelete }) => {
                       }
                     />
                   ) : item.reject ? (
-                    "✅"
-                  ) : (
-                    "❌"
-                  )}
-                </td>
-
-                {/* Ordered On */}
-                <td className="border px-2 text-center">
-                  {isEditing ? (
-                    <input
-                      type="date"
-                      className="w-32 border rounded px-1 py-0.5"
-                      value={editForm.orderedOn || ""}
-                      onChange={(e) => onChange("orderedOn", e.target.value)}
-                    />
-                  ) : (
-                    <OrderedDateCountdown orderDate={item.orderedOn} />
-                  )}
-                </td>
-
-                {/* RefundSubmitted */}
-                <td className="border px-2 text-center">
-                  {isEditing ? (
-                    <input
-                      type="checkbox"
-                      checked={!!editForm.refundSubmitted}
-                      onChange={(e) =>
-                        onCheckboxChange("refundSubmitted", e.target.checked)
-                      }
-                    />
-                  ) : item.refundSubmitted ? (
                     "✅"
                   ) : (
                     "❌"

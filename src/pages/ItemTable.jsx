@@ -269,7 +269,7 @@ const ItemTable = ({ user }) => {
         </div>
 
         <button
-          className="mt-36 sm:mt-12 md:h-10 md:w-36 lg:w-44 flex items-center bg-green-600
+          className="mt-[150px] sm:mt-12 md:h-10 md:w-36 lg:w-44 flex items-center bg-green-600
                      shadow-sm shadow-slate-400 hover:bg-green-600 hover:shadow-md
                    hover:shadow-slate-400 font-bold text-white justify-center font-serif
                      px-3 py-1 rounded"
@@ -299,35 +299,29 @@ const ItemTable = ({ user }) => {
         ) : (
           <ProductTable
             items={paginatedItems}
+            itemsPerPage={itemsPerPage}
+            currentPage={currentPage}
             handleUpdate={handleUpdate}
             handleDelete={handleDelete}
           />
         )}
       </div>
-      <button
-        className="text-white bg-orange-600 px-4 py-2 rounded-md font-serif font-semibold mb-4
-                 hover:bg-orange-700 transition-colors duration-300 shadow-sm shadow-slate-400
-                   hover:shadow-md hover:shadow-slate-400 my-8 w-32 float-right"
-        onClick={() => setShowPaid((prev) => !prev)}
-      >
-        {showPaid ? "Active Items" : "Paid Items"}
-      </button>
-
-      {/* pagination */}
+    
+      {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex justify-center items-center gap-4 mt-4">
           <button
-            className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
+            className="px-3 py-1 bg-gray-300 rounded disabled:opacity-50"
             onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
             disabled={currentPage === 1}
           >
             Prev
           </button>
           <span>
-            Page {currentPage} of {totalPages || 1}
+            Page {currentPage} of {totalPages}
           </span>
           <button
-            className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
+            className="px-3 py-1 bg-gray-300 rounded disabled:opacity-50"
             onClick={() =>
               setCurrentPage((prev) => Math.min(prev + 1, totalPages))
             }
@@ -337,6 +331,18 @@ const ItemTable = ({ user }) => {
           </button>
         </div>
       )}
+
+      {/* Toggle Paid / Active Items button BELOW pagination */}
+      <div className="flex justify-end mt-4">
+        <button
+          className="text-white bg-orange-600 px-4 py-2 rounded-md font-serif font-semibold
+                     hover:bg-orange-700 transition-colors duration-300 shadow-sm shadow-slate-400
+                       hover:shadow-md hover:shadow-slate-400"
+          onClick={() => setShowPaid((prev) => !prev)}
+        >
+          {showPaid ? "Active Items" : "Paid Items"}
+        </button>
+      </div>
     </div>
   );
 };
