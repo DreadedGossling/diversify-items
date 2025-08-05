@@ -730,10 +730,10 @@ const Table = ({
                 <td className="border px-6 text-center">
                   {isEditing ? (
                     <>
-                      <div>
+                      <div className="space-y-1 md:space-y-0 md:flex md:justify-center md:space-x-2">
                         <button
                           onClick={onSave}
-                          className="text-white px-2 py-1 w-16 bg-green-600 hover:bg-green-700"
+                          className="text-white ml-2 px-2 py-1 w-16 bg-green-600 hover:bg-green-700"
                         >
                           Update
                         </button>
