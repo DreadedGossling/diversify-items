@@ -115,6 +115,15 @@ const AddProductForm = ({
           value={form.productCode}
           onChange={(e) => onFieldChange("productCode", e.target.value)}
         />
+        <input
+          id="orderedOn"
+          type="date"
+          className="border rounded px-2 py-1"
+          required
+          value={form.orderedOn}
+          onChange={(e) => onFieldChange("orderedOn", e.target.value)}
+          max={new Date().toISOString().split("T")[0]} // optional: prevent future dates
+        />
         <select
           className="border rounded px-2 py-1"
           required

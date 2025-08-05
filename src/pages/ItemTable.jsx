@@ -18,8 +18,10 @@ const emptyItem = {
   userId: "",
   platform: "",
   reviewerName: "",
+  refundSubmitted: false,
   amountPaid: "",
   paidBy: "",
+  orderedOn: new Date().toISOString().split("T")[0],
   refundAmount: "",
   deliveredOn: "-",
   reviewedOn: "-",
@@ -40,6 +42,15 @@ const ItemTable = ({ user }) => {
   const [filterStatus, setFilterStatus] = useState("All");
   const [reviewerPaidByOptions, setReviewerPaidByOptions] = useState([]);
   const [showPaid, setShowPaid] = useState(false); // NEW: toggles showing only paid items
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
+
+  const paginatedItems = filteredItems.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   const fetchItems = async () => {
     try {
@@ -267,7 +278,6 @@ const ItemTable = ({ user }) => {
           <AiOutlinePlus className="mr-1" /> Add Item
         </button>
       </div>
-
       {showAdd && !showPaid && (
         <AddProductForm
           emptyItem={emptyItem}
@@ -278,7 +288,6 @@ const ItemTable = ({ user }) => {
           defaultUser={user?.email}
         />
       )}
-
       <div className="overflow-x-auto">
         {filteredItems.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-gray-500">
@@ -289,13 +298,12 @@ const ItemTable = ({ user }) => {
           </div>
         ) : (
           <ProductTable
-            items={filteredItems}
+            items={paginatedItems}
             handleUpdate={handleUpdate}
             handleDelete={handleDelete}
           />
         )}
       </div>
-
       <button
         className="text-white bg-orange-600 px-4 py-2 rounded-md font-serif font-semibold mb-4
                  hover:bg-orange-700 transition-colors duration-300 shadow-sm shadow-slate-400
@@ -304,6 +312,31 @@ const ItemTable = ({ user }) => {
       >
         {showPaid ? "Active Items" : "Paid Items"}
       </button>
+
+      {/* pagination */}
+      {totalPages > 1 && (
+        <div className="flex justify-center items-center gap-4 mt-4">
+          <button
+            className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
+            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1}
+          >
+            Prev
+          </button>
+          <span>
+            Page {currentPage} of {totalPages || 1}
+          </span>
+          <button
+            className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
+            onClick={() =>
+              setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+            }
+            disabled={currentPage === totalPages || totalPages === 0}
+          >
+            Next
+          </button>
+        </div>
+      )}
     </div>
   );
 };

@@ -7,6 +7,27 @@ const formatDate = (dateStr) => {
   return `${day}-${month}-${year}`;
 };
 
+const getDaysDifference = (dateStr) => {
+  if (!dateStr || dateStr === "No Return" || dateStr === "-") {
+    return null;
+  }
+  const today = new Date();
+  const targetDate = new Date(dateStr + "T00:00:00");
+  // Reset time for accurate day difference
+  today.setHours(0, 0, 0, 0);
+  const diffTime = targetDate - today;
+  return Math.floor(diffTime / (1000 * 60 * 60 * 24));
+};
+
+function getDaysSinceDate(dateStr) {
+  if (!dateStr) return null;
+  const startDate = new Date(dateStr + "T00:00:00");
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // Remove time for exact day comparison
+  const diffTime = today - startDate; // difference in ms
+  return Math.floor(diffTime / (1000 * 60 * 60 * 24)); // convert to whole days
+}
+
 const Table = ({ items, handleUpdate, handleDelete }) => {
   const [editingRowId, setEditingRowId] = useState(null);
   const [editForm, setEditForm] = useState({});
@@ -72,6 +93,8 @@ const Table = ({ items, handleUpdate, handleDelete }) => {
       returnCloseOn: item.returnCloseOn || "",
       reviewLive: !!item.reviewLive,
       reject: !!item.reject,
+      orderedOn: item.orderedOn || "",
+      refundSubmitted: !!item.refundSubmitted,
       refundProcess: !!item.refundProcess,
       received: !!item.received,
     });
@@ -106,38 +129,169 @@ const Table = ({ items, handleUpdate, handleDelete }) => {
 
   const sortItems = (items) => {
     return items.slice().sort((a, b) => {
-      // 1. Rejected first
+      // 1. Rejected items first
       if (a.reject && !b.reject) return -1;
       if (!a.reject && b.reject) return 1;
 
-      // 2. Review Live only (reviewLive true, refundProcess false, received false)
+      // Helper to convert return dates to comparable timestamp
+      const getReturnCloseTime = (item) => {
+        if (
+          !item.returnClose ||
+          item.returnClose === "NaN" ||
+          item.returnClose === "-" ||
+          item.returnClose === "No Return"
+        )
+          return Infinity;
+        const parts = item.returnClose.split("-");
+        if (parts.length !== 3) return Infinity;
+        const [day, month, year] = parts;
+        return new Date(`${year}-${month}-${day}`).getTime();
+      };
+
+      // 2. Review Live only (reviewLive=true, refundProcess=false, received=false)
       const aReviewLiveOnly = a.reviewLive && !a.refundProcess && !a.received;
       const bReviewLiveOnly = b.reviewLive && !b.refundProcess && !b.received;
       if (aReviewLiveOnly && !bReviewLiveOnly) return -1;
       if (!aReviewLiveOnly && bReviewLiveOnly) return 1;
+      if (aReviewLiveOnly && bReviewLiveOnly) {
+        // Sort by nearest return close date ascending
+        return getReturnCloseTime(a) - getReturnCloseTime(b);
+      }
 
-      // 3. Review Live + Refund (reviewLive true, refundProcess true, received false)
-      const aReviewLiveRefund = a.reviewLive && a.refundProcess && !a.received;
-      const bReviewLiveRefund = b.reviewLive && b.refundProcess && !b.received;
-      if (aReviewLiveRefund && !bReviewLiveRefund) return -1;
-      if (!aReviewLiveRefund && bReviewLiveRefund) return 1;
-
-      // 4. New products (none of the above flags true)
+      // 3. New products (none of the flags set)
       const aNew =
         !a.reject && !a.reviewLive && !a.refundProcess && !a.received;
       const bNew =
         !b.reject && !b.reviewLive && !b.refundProcess && !b.received;
       if (aNew && !bNew) return -1;
       if (!aNew && bNew) return 1;
+      if (aNew && bNew) {
+        // Sort by nearest return close date ascending
+        return getReturnCloseTime(a) - getReturnCloseTime(b);
+      }
 
-      // 5. Review Live + Refund + Received (all true)
-      const aAllTrue = a.reviewLive && a.refundProcess && a.received;
-      const bAllTrue = b.reviewLive && b.refundProcess && b.received;
-      if (aAllTrue && !bAllTrue) return 1;
-      if (!aAllTrue && bAllTrue) return -1;
+      // 4. Review Live + Refund
+      const aReviewLiveRefund = a.reviewLive && a.refundProcess && !a.received;
+      const bReviewLiveRefund = b.reviewLive && b.refundProcess && !b.received;
+      if (aReviewLiveRefund && !bReviewLiveRefund) return -1;
+      if (!aReviewLiveRefund && bReviewLiveRefund) return 1;
 
+      // Otherwise keep existing order
       return 0;
     });
+  };
+
+  const ReturnClosingCell = ({ dateStr }) => {
+    const [daysLeft, setDaysLeft] = useState(getDaysDifference(dateStr));
+
+    useEffect(() => {
+      // Update at midnight every day
+      const now = new Date();
+      const msToNextDay =
+        new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1) - now;
+
+      const timeoutId = setTimeout(() => {
+        setDaysLeft(getDaysDifference(dateStr));
+        // Then setup an interval to update every 24 hours
+        const intervalId = setInterval(() => {
+          setDaysLeft(getDaysDifference(dateStr));
+        }, 24 * 60 * 60 * 1000);
+        // Cleanup
+        return () => clearInterval(intervalId);
+      }, msToNextDay);
+
+      return () => clearTimeout(timeoutId);
+    }, [dateStr]);
+
+    if (!dateStr || dateStr === "-") {
+      return <span>-</span>;
+    }
+
+    if (dateStr === "No Return") {
+      return <span>No Return</span>;
+    }
+
+    if (daysLeft === null) {
+      return <span>{dateStr}</span>;
+    }
+
+    if (daysLeft > 0) {
+      return (
+        <span className="text-center space-y-2">
+          <p>
+            {daysLeft} {daysLeft === 1 ? "Day" : "Days"} Left
+          </p>
+          <p>{formatDate(dateStr)}</p>
+        </span>
+      );
+    } else if (daysLeft === 0) {
+      return (
+        <span className="text-red-600 font-semibold text-center space-y-2">
+          <p>0 Day left</p>
+          <p>{formatDate(dateStr)}</p>
+        </span>
+      );
+    } else {
+      // daysLeft < 0 means date passed
+      return (
+        <span className="text-red-600 font-semibold text-center space-y-2">
+          <p> Over</p>
+          <p>{formatDate(dateStr)}</p>
+        </span>
+      );
+    }
+  };
+
+  const OrderedDateCountdown = ({ orderDate }) => {
+    const [daysSinceOrder, setDaysSinceOrder] = useState(() =>
+      getDaysSinceDate(orderDate)
+    );
+
+    useEffect(() => {
+      // Update at next midnight + every 24 hours
+      const now = new Date();
+      const msToNextMidnight =
+        new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1) - now;
+
+      const timeoutId = setTimeout(() => {
+        setDaysSinceOrder(getDaysSinceDate(orderDate));
+        const intervalId = setInterval(() => {
+          setDaysSinceOrder((prev) => prev + 1);
+        }, 24 * 60 * 60 * 1000);
+
+        return () => clearInterval(intervalId);
+      }, msToNextMidnight);
+
+      return () => clearTimeout(timeoutId);
+    }, [orderDate]);
+
+    if (!orderDate) return <span>-</span>;
+
+    const remainingDays = 15 - daysSinceOrder;
+
+    if (remainingDays > 0) {
+      return (
+        <span className="text-center space-y-2">
+          <p>
+            {remainingDays} {remainingDays === 1 ? "Day" : "Days"} Left
+          </p>
+          <p>{formatDate(orderDate)}</p>
+        </span>
+      );
+    } else if (remainingDays === 0) {
+      return (
+        <div className="text-red-800 font-semibold text-center space-y-2">
+          <p>0 Day Left</p>
+          <p>{formatDate(orderDate)}</p>
+        </div>
+      );
+    } else {
+      return (
+        <div className="text-red-800 font-semibold text-center space-y-2">
+          <p>Portal Closed</p>
+        </div>
+      );
+    }
   };
 
   return (
@@ -169,14 +323,20 @@ const Table = ({ items, handleUpdate, handleDelete }) => {
             <th className="border px-2 py-1 bg-blue-200 font-serif">
               Reviewed On
             </th>
-            <th className="border px-2 py-1 bg-blue-200 font-serif">
-              Return Close On
+            <th className="border px-2 py-1 bg-blue-200 font-serif min-w-[125px]">
+              Return Closes On
             </th>
             <th className="border px-2 py-1 bg-blue-200 font-serif">
               Review Live
             </th>
             <th className="border px-2 py-1 bg-blue-200 font-serif">
               Need Reject
+            </th>
+            <th className="border px-2 py-1 bg-blue-200 font-serif min-w-[125px]">
+              Ordered On
+            </th>
+            <th className="border px-2 py-1 bg-blue-200 font-serif">
+              Form Submitted
             </th>
             <th className="border px-2 py-1 bg-blue-200 font-serif">
               Refund Processed
@@ -194,15 +354,34 @@ const Table = ({ items, handleUpdate, handleDelete }) => {
               <tr
                 key={item.docId}
                 className={`font-mono hover:bg-gray-100 ${
-                  item.reviewLive && item.reject
-                    ? "bg-yellow-400 hover:bg-yellow-300"
-                    : item.reviewLive && item.refundProcess && item.received
-                    ? "bg-slate-500 hover:bg-slate-600"
-                    : item.reviewLive && item.refundProcess
-                    ? "bg-emerald-400 hover:bg-emerald-200"
-                    : item.reviewLive
+                  // 1. New item or only reviewLive true -> white bg
+                  item.isNew ||
+                  (item.reviewLive &&
+                    !item.reject &&
+                    !item.refundSubmitted &&
+                    !item.refundProcess &&
+                    !item.received)
                     ? "bg-white hover:bg-gray-100"
-                    : "bg-white hover:bg-gray-100"
+                    : // 2. reviewLive + reject (refundSubmitted can be either) -> yellow bg
+                    item.reviewLive && item.reject
+                    ? "bg-yellow-400 hover:bg-yellow-300"
+                    : // 3. reviewLive + !reject + refundSubmitted -> indigo bg
+                    item.reviewLive && !item.reject && item.refundSubmitted
+                    ? "bg-indigo-400 hover:bg-indigo-300"
+                    : // 4. reviewLive + refundProcess + refundSubmitted (regardless of received) -> emerald bg
+                    item.reviewLive &&
+                      item.refundProcess &&
+                      item.refundSubmitted &&
+                      !item.received
+                    ? "bg-emerald-400 hover:bg-emerald-200"
+                    : // 5. reviewLive + refundProcess + refundSubmitted + received -> slate bg
+                    item.reviewLive &&
+                      item.refundProcess &&
+                      item.refundSubmitted &&
+                      item.received
+                    ? "bg-slate-700 hover:bg-slate-600"
+                    : // fallback default white bg
+                      "bg-white hover:bg-gray-100"
                 }`}
               >
                 {/* S.No. */}
@@ -225,7 +404,7 @@ const Table = ({ items, handleUpdate, handleDelete }) => {
                 </td>
 
                 {/* Combined Cell: Product Name / Order Id / Platform / Reviewer Name */}
-                <td className="border px-2">
+                <td className="border px-2 py-1">
                   {isEditing ? (
                     <div className="flex flex-col space-y-1">
                       <input
@@ -286,7 +465,7 @@ const Table = ({ items, handleUpdate, handleDelete }) => {
                 </td>
 
                 {/* Amount Paid */}
-                <td className="border px-2">
+                <td className="border px-2 text-center">
                   {isEditing ? (
                     <input
                       type="number"
@@ -324,7 +503,7 @@ const Table = ({ items, handleUpdate, handleDelete }) => {
                 </td>
 
                 {/* Refund Amount */}
-                <td className="border px-2">
+                <td className="border px-2 text-center">
                   {isEditing ? (
                     <input
                       type="number"
@@ -340,7 +519,7 @@ const Table = ({ items, handleUpdate, handleDelete }) => {
                 </td>
 
                 {/* Delivered On */}
-                <td className="border px-2">
+                <td className="border px-2 min-w-[105px] text-center">
                   {isEditing ? (
                     <input
                       type="date"
@@ -354,7 +533,7 @@ const Table = ({ items, handleUpdate, handleDelete }) => {
                 </td>
 
                 {/* Reviewed On */}
-                <td className="border px-2">
+                <td className="border px-2 min-w-[105px] text-center">
                   {isEditing ? (
                     <input
                       type="date"
@@ -373,7 +552,7 @@ const Table = ({ items, handleUpdate, handleDelete }) => {
                     isEditing
                       ? ""
                       : item.returnCloseOn === "No Return"
-                      ? "bg-red-200"
+                      ? "text-center space-y-2"
                       : ""
                   }`}
                 >
@@ -417,13 +596,13 @@ const Table = ({ items, handleUpdate, handleDelete }) => {
                         )}
                     </>
                   ) : item.returnCloseOn === "No Return" ? (
-                    <span className="text-gray-600 font-semibold">
+                    <span className="text-red-600 font-semibold">
                       No Return
                     </span>
                   ) : item.returnCloseOn === "-" || !item.returnCloseOn ? (
                     <span>-</span>
                   ) : (
-                    formatDate(item.returnCloseOn)
+                    <ReturnClosingCell dateStr={item.returnCloseOn} />
                   )}
                 </td>
 
@@ -455,6 +634,37 @@ const Table = ({ items, handleUpdate, handleDelete }) => {
                       }
                     />
                   ) : item.reject ? (
+                    "✅"
+                  ) : (
+                    "❌"
+                  )}
+                </td>
+
+                {/* Ordered On */}
+                <td className="border px-2 text-center">
+                  {isEditing ? (
+                    <input
+                      type="date"
+                      className="w-32 border rounded px-1 py-0.5"
+                      value={editForm.orderedOn || ""}
+                      onChange={(e) => onChange("orderedOn", e.target.value)}
+                    />
+                  ) : (
+                    <OrderedDateCountdown orderDate={item.orderedOn} />
+                  )}
+                </td>
+
+                {/* RefundSubmitted */}
+                <td className="border px-2 text-center">
+                  {isEditing ? (
+                    <input
+                      type="checkbox"
+                      checked={!!editForm.refundSubmitted}
+                      onChange={(e) =>
+                        onCheckboxChange("refundSubmitted", e.target.checked)
+                      }
+                    />
+                  ) : item.refundSubmitted ? (
                     "✅"
                   ) : (
                     "❌"
