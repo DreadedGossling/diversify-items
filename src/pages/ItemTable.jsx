@@ -8,8 +8,8 @@ import {
   deleteDoc,
 } from "firebase/firestore";
 import { AiOutlinePlus, AiFillProduct } from "react-icons/ai";
-import AddProductForm from "../components/Items/AddForm"; // add form (new items only)
-import ProductTable from "../components/Items/ProductTable"; // inline edit table
+import AddProductForm from "../components/Items/AddForm";
+import ProductTable from "../components/Items/ProductTable"; // Expects getStatus prop
 
 const emptyItem = {
   productName: "",
@@ -41,20 +41,35 @@ const ItemTable = ({ user }) => {
   const [filterPaidBy, setFilterPaidBy] = useState("All");
   const [filterStatus, setFilterStatus] = useState("All");
   const [reviewerPaidByOptions, setReviewerPaidByOptions] = useState([]);
-  const [showPaid, setShowPaid] = useState(false); // toggles showing only paid items
+  const [showPaid, setShowPaid] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  // Calculate total pages for pagination
   const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
 
-  // Paginate filtered items
+  // Pagination: continuous serial
   const paginatedItems = filteredItems.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
 
-  // Fetch items from Firestore and apply filtering
+  // ---- STATUS LOGIC ----
+  const getStatus = (item) => {
+    // All "activity" flags are false = NEW
+    if (
+      !item.refundSubmitted &&
+      !item.reviewLive &&
+      !item.reject &&
+      !item.refundProcess &&
+      !item.received
+    ) {
+      return "New";
+    }
+    // You can add more custom rules here, e.g. "Submitted" etc
+    return "";
+  };
+
+  // ---- DATA FETCH AND FILTER ----
   const fetchItems = async () => {
     try {
       const itemsRef = collection(db, "items");
@@ -67,20 +82,15 @@ const ItemTable = ({ user }) => {
 
       let filtered = fetchedItems;
 
-      // Apply Paid/Active filter
+      // Paid/Active toggle
       if (showPaid) {
-        // Show only paid items: reviewLive + refundProcess + received all true
         filtered = filtered.filter(
           (item) => item.reviewLive && item.refundProcess && item.received
         );
-
-        // Apply other filters within paid items
-        if (filterUser !== "All") {
+        if (filterUser !== "All")
           filtered = filtered.filter((item) => item.userId === filterUser);
-        }
-        if (filterPaidBy !== "All") {
+        if (filterPaidBy !== "All")
           filtered = filtered.filter((item) => item.paidBy === filterPaidBy);
-        }
         if (filterStatus !== "All") {
           if (filterStatus === "Review Live")
             filtered = filtered.filter((item) => item.reviewLive);
@@ -89,31 +99,39 @@ const ItemTable = ({ user }) => {
           else if (filterStatus === "Refund Process")
             filtered = filtered.filter((item) => item.refundProcess);
           else if (filterStatus === "Submitted")
+            filtered = filtered.filter((item) =>
+              (
+                item.reviewLive === true &&
+                item.refundSubmitted === true &&
+                item.refundProcess === false &&
+                item.reject === false &&
+                item.received === false
+              ) ||
+              (
+                item.reviewLive === true &&
+                item.reject === true &&
+                item.refundSubmitted === true &&
+                item.refundProcess === false &&
+                item.received === false
+              )
+            );
+          else if (filterStatus === "New")
             filtered = filtered.filter(
               (item) =>
-                (item.reviewLive === true &&
-                  item.refundSubmitted === true &&
-                  item.refundProcess === false &&
-                  item.reject === false &&
-                  item.received === false) ||
-                (item.reviewLive === true &&
-                  item.reject === true &&
-                  item.refundSubmitted === true &&
-                  item.refundProcess === false &&
-                  item.received === false)
+                !item.refundSubmitted &&
+                !item.reviewLive &&
+                !item.reject &&
+                !item.refundProcess &&
+                !item.received
             );
         }
       } else {
-        // Normal mode: exclude all received=true (paid) items
+        // Active: Exclude all received items
         filtered = filtered.filter((item) => !item.received);
-
-        // Apply other filters
-        if (filterUser !== "All") {
+        if (filterUser !== "All")
           filtered = filtered.filter((item) => item.userId === filterUser);
-        }
-        if (filterPaidBy !== "All") {
+        if (filterPaidBy !== "All")
           filtered = filtered.filter((item) => item.paidBy === filterPaidBy);
-        }
         if (filterStatus !== "All") {
           if (filterStatus === "Review Live")
             filtered = filtered.filter((item) => item.reviewLive);
@@ -122,24 +140,35 @@ const ItemTable = ({ user }) => {
           else if (filterStatus === "Refund Process")
             filtered = filtered.filter((item) => item.refundProcess);
           else if (filterStatus === "Submitted")
+            filtered = filtered.filter((item) =>
+              (
+                item.reviewLive === true &&
+                item.refundSubmitted === true &&
+                item.refundProcess === false &&
+                item.reject === false &&
+                item.received === false
+              ) ||
+              (
+                item.reviewLive === true &&
+                item.reject === true &&
+                item.refundSubmitted === true &&
+                item.refundProcess === false &&
+                item.received === false
+              )
+            );
+          else if (filterStatus === "New")
             filtered = filtered.filter(
               (item) =>
-                (item.reviewLive === true &&
-                  item.refundSubmitted === true &&
-                  item.refundProcess === false &&
-                  item.reject === false &&
-                  item.received === false) ||
-                (item.reviewLive === true &&
-                  item.reject === true &&
-                  item.refundSubmitted === true &&
-                  item.refundProcess === false &&
-                  item.received === false)
+                !item.refundSubmitted &&
+                !item.reviewLive &&
+                !item.reject &&
+                !item.refundProcess &&
+                !item.received
             );
         }
       }
-
       setFilteredItems(filtered);
-      setCurrentPage(1); // reset to first page on new filter or data refresh
+      setCurrentPage(1);
     } catch (error) {
       console.error("Error fetching items:", error);
       setAllItems([]);
@@ -149,15 +178,10 @@ const ItemTable = ({ user }) => {
 
   useEffect(() => {
     fetchItems();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line
   }, [user, filterUser, filterPaidBy, filterStatus, showPaid]);
 
-  // Unique User Ids for filter dropdown
-  const uniqueUserIds = Array.from(
-    new Set(allItems.map((item) => item.userId).filter(Boolean))
-  );
-
-  // Reviewer/PaidBy options for filter dropdown
+  // Reviewer/PaidBy dropdown
   useEffect(() => {
     async function fetchReviewerPaidByOptions() {
       try {
@@ -172,7 +196,12 @@ const ItemTable = ({ user }) => {
     fetchReviewerPaidByOptions();
   }, []);
 
-  // Update item
+  // Unique User Ids for filter
+  const uniqueUserIds = Array.from(
+    new Set(allItems.map((item) => item.userId).filter(Boolean))
+  );
+
+  // Edit/Update handlers
   const handleUpdate = async (id, updatedData) => {
     try {
       await updateDoc(doc(db, "items", id), updatedData);
@@ -182,7 +211,6 @@ const ItemTable = ({ user }) => {
     }
   };
 
-  // Delete item
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this item?")) {
       try {
@@ -201,12 +229,9 @@ const ItemTable = ({ user }) => {
         <div>
           <h4 className="font-serif font-bold mb-1 text-lg">Filters</h4>
           <div className="flex flex-col sm:flex-row flex-wrap gap-2">
-            {/* User filter */}
+            {/* User */}
             <div className="w-full sm:w-auto flex flex-col">
-              <label
-                htmlFor="userFilter"
-                className="font-medium text-sm mb-1"
-              >
+              <label htmlFor="userFilter" className="font-medium text-sm mb-1">
                 User:
               </label>
               <select
@@ -224,12 +249,9 @@ const ItemTable = ({ user }) => {
               </select>
             </div>
 
-            {/* Paid By filter */}
+            {/* Paid By */}
             <div className="w-full sm:w-auto flex flex-col">
-              <label
-                htmlFor="paidByFilter"
-                className="font-medium text-sm mb-1"
-              >
+              <label htmlFor="paidByFilter" className="font-medium text-sm mb-1">
                 Paid By:
               </label>
               <select
@@ -247,12 +269,9 @@ const ItemTable = ({ user }) => {
               </select>
             </div>
 
-            {/* Status filter */}
+            {/* Status */}
             <div className="w-full sm:w-auto flex flex-col">
-              <label
-                htmlFor="statusFilter"
-                className="font-medium text-sm mb-1"
-              >
+              <label htmlFor="statusFilter" className="font-medium text-sm mb-1">
                 Status:
               </label>
               <select
@@ -265,13 +284,13 @@ const ItemTable = ({ user }) => {
                 <option value="Review Live">Review Live</option>
                 <option value="Need Reject">Need Reject</option>
                 <option value="Refund Process">Refund Process</option>
-                <option value="Submitted">Form Submitted</option> {/* New option */}
+                <option value="Submitted">Submitted</option>
+                <option value="New">New</option> {/* <- NEW */}
               </select>
             </div>
           </div>
         </div>
-
-        {/* Add Item Button */}
+        {/* Add Button */}
         <button
           className="mt-[150px] sm:mt-12 md:h-10 md:w-36 lg:w-44 flex items-center bg-green-600
                      shadow-sm shadow-slate-400 hover:bg-green-700 hover:shadow-md
@@ -283,7 +302,7 @@ const ItemTable = ({ user }) => {
         </button>
       </div>
 
-      {/* Add Product Form */}
+      {/* Add Form */}
       {showAdd && !showPaid && (
         <AddProductForm
           emptyItem={emptyItem}
@@ -295,7 +314,7 @@ const ItemTable = ({ user }) => {
         />
       )}
 
-      {/* Products Table or No Items message */}
+      {/* Table */}
       <div className="overflow-x-auto">
         {filteredItems.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-gray-500">
@@ -311,11 +330,12 @@ const ItemTable = ({ user }) => {
             currentPage={currentPage}
             handleUpdate={handleUpdate}
             handleDelete={handleDelete}
+            getStatus={getStatus} // <-- pass status logic to table
           />
         )}
       </div>
 
-      {/* Pagination controls */}
+      {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex justify-center items-center gap-4 mt-4">
           <button
@@ -340,12 +360,12 @@ const ItemTable = ({ user }) => {
         </div>
       )}
 
-      {/* Toggle Paid / Active Items button below pagination */}
+      {/* Paid/Active Toggle */}
       <div className="flex justify-end mt-4">
         <button
           className="text-white bg-orange-600 px-4 py-2 rounded-md font-serif font-semibold
-                     hover:bg-orange-700 transition-colors duration-300 shadow-sm shadow-slate-400
-                       hover:shadow-md hover:shadow-slate-400"
+            hover:bg-orange-700 transition-colors duration-300 shadow-sm shadow-slate-400
+            hover:shadow-md hover:shadow-slate-400"
           onClick={() => setShowPaid((prev) => !prev)}
         >
           {showPaid ? "Active Items" : "Paid Items"}
