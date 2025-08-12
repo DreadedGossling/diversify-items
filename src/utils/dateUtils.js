@@ -1,9 +1,5 @@
-// src/utils/dateUtils.js
-
-/**
- * Format a date string from "YYYY-MM-DD" to "DD-MM-YYYY"
- * Returns the original string if format is unexpected or empty.
- * @param {string} dateStr - Date string in "YYYY-MM-DD" format
+/** 
+* @param {string} dateStr - Date string in "YYYY-MM-DD" format
  * @returns {string} Formatted date string "DD-MM-YYYY"
  */
 export const formatDate = (dateStr) => {
@@ -14,9 +10,6 @@ export const formatDate = (dateStr) => {
 };
 
 /**
- * Calculate the difference in whole days between today (start of day) and a target date.
- * Returns null if input dateStr is "-", "No Return", or empty.
- * Positive if targetDate is in future, negative if in past.
  * @param {string} dateStr - Date string in "YYYY-MM-DD" format
  * @returns {number|null} Number of days difference or null
  */
@@ -32,8 +25,6 @@ export const getDaysDifference = (dateStr) => {
 };
 
 /**
- * Calculate the number of whole days since the given date string until today.
- * Returns null if dateStr is empty or invalid.
  * @param {string} dateStr - Date string in "YYYY-MM-DD" format
  * @returns {number|null} Number of days since dateStr or null
  */

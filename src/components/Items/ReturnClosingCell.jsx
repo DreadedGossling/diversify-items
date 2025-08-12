@@ -1,5 +1,4 @@
-// src/components/Items/ReturnClosingCell.js
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { formatDate, getDaysDifference } from "../../utils/dateUtils";
 
 const ReturnClosingCell = ({ dateStr }) => {

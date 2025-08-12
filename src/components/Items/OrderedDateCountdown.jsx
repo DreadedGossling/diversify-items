@@ -1,5 +1,4 @@
-// src/components/Items/OrderedDateCountdown.js
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { formatDate, getDaysSinceDate } from "../../utils/dateUtils";
 
 const OrderedDateCountdown = ({ orderDate }) => {

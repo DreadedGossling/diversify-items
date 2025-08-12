@@ -8,7 +8,6 @@ const ProductTable = ({
   currentPage,
   handleUpdate,
   handleDelete,
-  userIdOptions,
   reviewerOptions,
   platformOptions,
 }) => {
@@ -17,7 +16,27 @@ const ProductTable = ({
 
   const startEdit = (item) => {
     setEditingRowId(item.docId);
-    setEditForm({ ...item });
+    setEditForm({
+      productName: item.productName || "",
+      orderId: item.orderId || "",
+      productCode: item.productCode || "",
+      userId: item.userId || "",
+      docId: item.docId || "",
+      platform: item.platform || "",
+      reviewerName: item.reviewerName || "",
+      amountPaid: item.amountPaid || "",
+      paidBy: item.paidBy || "",
+      refundAmount: item.refundAmount || "",
+      deliveredOn: item.deliveredOn || "",
+      reviewedOn: item.reviewedOn || "",
+      returnCloseOn: item.returnCloseOn || "",
+      reviewLive: !!item.reviewLive,
+      reject: !!item.reject,
+      orderedOn: item.orderedOn || "",
+      refundSubmitted: !!item.refundSubmitted,
+      refundProcess: !!item.refundProcess,
+      received: !!item.received,
+    });
   };
 
   const cancelEdit = () => {
@@ -106,26 +125,6 @@ const ProductTable = ({
         </tr>
       </thead>
       <tbody>
-        {/* {items.map((item, idx) => (
-          <ProductTableRow
-            key={item.docId}
-            idx={idx}
-            itemsPerPage={itemsPerPage}
-            currentPage={currentPage}
-            item={item}
-            isEditing={editingRowId === item.docId}
-            editForm={editForm}
-            onChange={onChange}
-            onCheckboxChange={onCheckboxChange}
-            startEdit={startEdit}
-            cancelEdit={cancelEdit}
-            onSave={onSave}
-            handleDelete={handleDelete}
-            userIdOptions={userIdOptions}
-            reviewerOptions={reviewerOptions}
-            platformOptions={platformOptions}
-          />
-        ))} */}
         {sortedItems.map((item, idx) => (
           <ProductTableRow
             key={item.docId}
@@ -133,7 +132,6 @@ const ProductTable = ({
             itemsPerPage={itemsPerPage}
             currentPage={currentPage}
             item={item}
-            // ...other props as before...
             isEditing={editingRowId === item.docId}
             editForm={editForm}
             onChange={onChange}
@@ -142,9 +140,8 @@ const ProductTable = ({
             cancelEdit={cancelEdit}
             onSave={onSave}
             handleDelete={handleDelete}
-            userIdOptions={userIdOptions}
-            reviewerOptions={reviewerOptions}
-            platformOptions={platformOptions}
+            reviewerOptions={reviewerOptions || []}
+            platformOptions={platformOptions || []}
           />
         ))}
       </tbody>

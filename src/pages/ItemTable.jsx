@@ -44,6 +44,10 @@ const ItemTable = ({ user }) => {
   const [showPaid, setShowPaid] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+  const [userIdOptions, setUserIdOptions] = useState([]);
+  const [platformOptions, setPlatformOptions] = useState([]);
+  const [reviewerOptions, setReviewerOptions] = useState([]);
+  const [paidByOptions, setPaidByOptions] = useState([]);
 
   const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
 
@@ -53,9 +57,34 @@ const ItemTable = ({ user }) => {
     currentPage * itemsPerPage
   );
 
-  // ---- STATUS LOGIC ----
+  useEffect(() => {
+    async function fetchUserIds() {
+      const querySnapshot = await getDocs(collection(db, "userId"));
+      setUserIdOptions(querySnapshot.docs.map((doc) => doc.data().userId));
+    }
+    async function fetchPlatforms() {
+      const querySnapshot = await getDocs(collection(db, "platform"));
+      setPlatformOptions(
+        querySnapshot.docs.map((doc) => doc.data().platformName)
+      );
+      if (!form.platform) {
+        setForm((f) => ({ ...f, platform: "amazon" }));
+      }
+    }
+    async function fetchReviewers() {
+      const querySnapshot = await getDocs(collection(db, "reviewers"));
+      const reviewerNames = querySnapshot.docs.map(
+        (doc) => doc.data().reviewerName
+      );
+      setReviewerOptions(reviewerNames);
+      setPaidByOptions(reviewerNames);
+    }
+    fetchUserIds();
+    fetchPlatforms();
+    fetchReviewers();
+  }, []);
+
   const getStatus = (item) => {
-    // All "activity" flags are false = NEW
     if (
       !item.refundSubmitted &&
       !item.reviewLive &&
@@ -65,11 +94,9 @@ const ItemTable = ({ user }) => {
     ) {
       return "New";
     }
-    // You can add more custom rules here, e.g. "Submitted" etc
     return "";
   };
 
-  // ---- DATA FETCH AND FILTER ----
   const fetchItems = async () => {
     try {
       const itemsRef = collection(db, "items");
@@ -99,21 +126,18 @@ const ItemTable = ({ user }) => {
           else if (filterStatus === "Refund Process")
             filtered = filtered.filter((item) => item.refundProcess);
           else if (filterStatus === "Submitted")
-            filtered = filtered.filter((item) =>
-              (
-                item.reviewLive === true &&
-                item.refundSubmitted === true &&
-                item.refundProcess === false &&
-                item.reject === false &&
-                item.received === false
-              ) ||
-              (
-                item.reviewLive === true &&
-                item.reject === true &&
-                item.refundSubmitted === true &&
-                item.refundProcess === false &&
-                item.received === false
-              )
+            filtered = filtered.filter(
+              (item) =>
+                (item.reviewLive === true &&
+                  item.refundSubmitted === true &&
+                  item.refundProcess === false &&
+                  item.reject === false &&
+                  item.received === false) ||
+                (item.reviewLive === true &&
+                  item.reject === true &&
+                  item.refundSubmitted === true &&
+                  item.refundProcess === false &&
+                  item.received === false)
             );
           else if (filterStatus === "New")
             filtered = filtered.filter(
@@ -140,21 +164,18 @@ const ItemTable = ({ user }) => {
           else if (filterStatus === "Refund Process")
             filtered = filtered.filter((item) => item.refundProcess);
           else if (filterStatus === "Submitted")
-            filtered = filtered.filter((item) =>
-              (
-                item.reviewLive === true &&
-                item.refundSubmitted === true &&
-                item.refundProcess === false &&
-                item.reject === false &&
-                item.received === false
-              ) ||
-              (
-                item.reviewLive === true &&
-                item.reject === true &&
-                item.refundSubmitted === true &&
-                item.refundProcess === false &&
-                item.received === false
-              )
+            filtered = filtered.filter(
+              (item) =>
+                (item.reviewLive === true &&
+                  item.refundSubmitted === true &&
+                  item.refundProcess === false &&
+                  item.reject === false &&
+                  item.received === false) ||
+                (item.reviewLive === true &&
+                  item.reject === true &&
+                  item.refundSubmitted === true &&
+                  item.refundProcess === false &&
+                  item.received === false)
             );
           else if (filterStatus === "New")
             filtered = filtered.filter(
@@ -178,7 +199,6 @@ const ItemTable = ({ user }) => {
 
   useEffect(() => {
     fetchItems();
-    // eslint-disable-next-line
   }, [user, filterUser, filterPaidBy, filterStatus, showPaid]);
 
   // Reviewer/PaidBy dropdown
@@ -251,7 +271,10 @@ const ItemTable = ({ user }) => {
 
             {/* Paid By */}
             <div className="w-full sm:w-auto flex flex-col">
-              <label htmlFor="paidByFilter" className="font-medium text-sm mb-1">
+              <label
+                htmlFor="paidByFilter"
+                className="font-medium text-sm mb-1"
+              >
                 Paid By:
               </label>
               <select
@@ -271,7 +294,10 @@ const ItemTable = ({ user }) => {
 
             {/* Status */}
             <div className="w-full sm:w-auto flex flex-col">
-              <label htmlFor="statusFilter" className="font-medium text-sm mb-1">
+              <label
+                htmlFor="statusFilter"
+                className="font-medium text-sm mb-1"
+              >
                 Status:
               </label>
               <select
@@ -330,7 +356,11 @@ const ItemTable = ({ user }) => {
             currentPage={currentPage}
             handleUpdate={handleUpdate}
             handleDelete={handleDelete}
-            getStatus={getStatus} // <-- pass status logic to table
+            getStatus={getStatus}
+            platformOptions={platformOptions}
+            userIdOptions={userIdOptions}
+            reviewerOptions={reviewerOptions}
+            paidByOptions={paidByOptions}
           />
         )}
       </div>

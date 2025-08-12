@@ -1,4 +1,3 @@
-// src/components/Items/ProductTableRow.js
 import { formatDate } from "../../utils/dateUtils";
 import ReturnClosingCell from "./ReturnClosingCell";
 import OrderedDateCountdown from "./OrderedDateCountdown";
@@ -16,11 +15,11 @@ const ProductTableRow = ({
   cancelEdit,
   onSave,
   handleDelete,
-  userIdOptions,
   reviewerOptions,
   platformOptions,
 }) => {
-  // Compute row class based on your previous logic (updated order)
+  console.log("object", item);
+  console.log("editForm", editForm);
   const rowClass = `font-mono hover:bg-gray-100 ${
     item.isNew ||
     (item.reviewLive &&
@@ -29,20 +28,24 @@ const ProductTableRow = ({
       !item.refundProcess &&
       !item.received)
       ? "bg-white hover:bg-gray-100"
-      : item.reviewLive &&
+      : // slate: ALL final steps done
+      item.reviewLive &&
+        item.refundProcess &&
+        item.refundSubmitted &&
+        item.received
+      ? "bg-slate-400 hover:bg-slate-300"
+      : // lime: refund in process but not received yet
+      item.reviewLive &&
         item.refundProcess &&
         item.refundSubmitted &&
         !item.received
       ? "bg-lime-400 hover:bg-lime-300"
-      : item.reviewLive && item.reject
+      : // yellow: rejected
+      item.reviewLive && item.reject
       ? "bg-yellow-300 hover:bg-yellow-200"
-      : item.reviewLive && !item.reject && item.refundSubmitted
+      : // indigo: review live and submitted but processing hasn't started
+      item.reviewLive && !item.reject && item.refundSubmitted
       ? "bg-indigo-300 hover:bg-indigo-200"
-      : item.reviewLive &&
-        item.refundProcess &&
-        item.refundSubmitted &&
-        item.received
-      ? "bg-slate-700 hover:bg-slate-600"
       : "bg-white hover:bg-gray-100"
   }`;
 
@@ -93,7 +96,7 @@ const ProductTableRow = ({
               <option value="" disabled>
                 Select Platform
               </option>
-              {platformOptions.map((platform) => (
+              {(platformOptions || []).map((platform) => (
                 <option key={platform} value={platform}>
                   {platform}
                 </option>
@@ -107,7 +110,7 @@ const ProductTableRow = ({
               <option value="" disabled>
                 Select Reviewer
               </option>
-              {reviewerOptions.map((reviewer) => (
+              {(reviewerOptions || []).map((reviewer) => (
                 <option key={reviewer} value={reviewer}>
                   {reviewer}
                 </option>
