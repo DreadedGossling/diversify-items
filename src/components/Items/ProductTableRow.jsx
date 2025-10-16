@@ -18,8 +18,6 @@ const ProductTableRow = ({
   reviewerOptions,
   platformOptions,
 }) => {
-  console.log("object", item);
-  console.log("editForm", editForm);
   const rowClass = `font-mono hover:bg-gray-100 ${
     item.isNew ||
     (item.reviewLive &&

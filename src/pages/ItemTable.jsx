@@ -38,16 +38,15 @@ const ItemTable = ({ user }) => {
   const [showAdd, setShowAdd] = useState(false);
   const [form, setForm] = useState(emptyItem);
   const [filterUser, setFilterUser] = useState("All");
-  const [filterPaidBy, setFilterPaidBy] = useState("All");
   const [filterStatus, setFilterStatus] = useState("All");
-  const [reviewerPaidByOptions, setReviewerPaidByOptions] = useState([]);
+  const [filterReviewedBy, setFilterReviewedBy] = useState("All");
+  const [reviewedByOptions, setReviewedByOptions] = useState([]);
   const [showPaid, setShowPaid] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const [userIdOptions, setUserIdOptions] = useState([]);
   const [platformOptions, setPlatformOptions] = useState([]);
   const [reviewerOptions, setReviewerOptions] = useState([]);
-  const [paidByOptions, setPaidByOptions] = useState([]);
 
   const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
 
@@ -77,7 +76,7 @@ const ItemTable = ({ user }) => {
         (doc) => doc.data().reviewerName
       );
       setReviewerOptions(reviewerNames);
-      setPaidByOptions(reviewerNames);
+      setReviewedByOptions(reviewerNames);
     }
     fetchUserIds();
     fetchPlatforms();
@@ -116,8 +115,10 @@ const ItemTable = ({ user }) => {
         );
         if (filterUser !== "All")
           filtered = filtered.filter((item) => item.userId === filterUser);
-        if (filterPaidBy !== "All")
-          filtered = filtered.filter((item) => item.paidBy === filterPaidBy);
+        if (filterReviewedBy !== "All")
+          filtered = filtered.filter(
+            (item) => item.reviewerName === filterReviewedBy
+          );
         if (filterStatus !== "All") {
           if (filterStatus === "Review Live")
             filtered = filtered.filter((item) => item.reviewLive);
@@ -154,8 +155,10 @@ const ItemTable = ({ user }) => {
         filtered = filtered.filter((item) => !item.received);
         if (filterUser !== "All")
           filtered = filtered.filter((item) => item.userId === filterUser);
-        if (filterPaidBy !== "All")
-          filtered = filtered.filter((item) => item.paidBy === filterPaidBy);
+        if (filterReviewedBy !== "All")
+          filtered = filtered.filter(
+            (item) => item.reviewerName === filterReviewedBy
+          );
         if (filterStatus !== "All") {
           if (filterStatus === "Review Live")
             filtered = filtered.filter((item) => item.reviewLive);
@@ -199,21 +202,21 @@ const ItemTable = ({ user }) => {
 
   useEffect(() => {
     fetchItems();
-  }, [user, filterUser, filterPaidBy, filterStatus, showPaid]);
+  }, [user, filterUser, filterReviewedBy, filterStatus, showPaid]);
 
-  // Reviewer/PaidBy dropdown
+  // Reviewed By dropdown
   useEffect(() => {
-    async function fetchReviewerPaidByOptions() {
+    async function fetchReviewedByOptions() {
       try {
         const querySnapshot = await getDocs(collection(db, "reviewers"));
-        setReviewerPaidByOptions(
+        setReviewedByOptions(
           querySnapshot.docs.map((doc) => doc.data().reviewerName)
         );
       } catch (err) {
-        setReviewerPaidByOptions([]);
+        setReviewedByOptions([]);
       }
     }
-    fetchReviewerPaidByOptions();
+    fetchReviewedByOptions();
   }, []);
 
   // Unique User Ids for filter
@@ -269,22 +272,22 @@ const ItemTable = ({ user }) => {
               </select>
             </div>
 
-            {/* Paid By */}
+            {/* Reviewed By */}
             <div className="w-full sm:w-auto flex flex-col">
               <label
                 htmlFor="paidByFilter"
                 className="font-medium text-sm mb-1"
               >
-                Paid By:
+                Reviewed By:
               </label>
               <select
-                id="paidByFilter"
-                value={filterPaidBy}
-                onChange={(e) => setFilterPaidBy(e.target.value)}
+                id="reviewedByFilter"
+                value={filterReviewedBy}
+                onChange={(e) => setFilterReviewedBy(e.target.value)}
                 className="border border-cyan-400 rounded text-sm md:w-56 md:h-8"
               >
                 <option value="All">All</option>
-                {reviewerPaidByOptions.map((pb) => (
+                {reviewedByOptions.map((pb) => (
                   <option key={pb} value={pb}>
                     {pb}
                   </option>
@@ -360,7 +363,7 @@ const ItemTable = ({ user }) => {
             platformOptions={platformOptions}
             userIdOptions={userIdOptions}
             reviewerOptions={reviewerOptions}
-            paidByOptions={paidByOptions}
+            reviewedByOptions={reviewedByOptions}
           />
         )}
       </div>
