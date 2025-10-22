@@ -1,6 +1,7 @@
 import { formatDate } from "../../utils/dateUtils";
 import ReturnClosingCell from "./ReturnClosingCell";
 import OrderedDateCountdown from "./OrderedDateCountdown";
+import { useEffect } from "react";
 
 const ProductTableRow = ({
   item,
@@ -18,6 +19,29 @@ const ProductTableRow = ({
   reviewerOptions,
   platformOptions,
 }) => {
+  // ✅ Helper function to generate full product code dynamically
+  const generateFullProductCode = (productCode, userId, reviewerName) => {
+    const reviewerCode = reviewerName
+      ? reviewerName.replace(/\s+/g, "").slice(0, 3)
+      : "";
+    if (!productCode || !userId || !reviewerCode) return "";
+    return `${productCode}${userId}${reviewerCode}`;
+  };
+
+  // ✅ Automatically update fullProductCode when relevant fields change
+  useEffect(() => {
+    if (isEditing) {
+      const newCode = generateFullProductCode(
+        editForm.productCode,
+        editForm.userId,
+        editForm.reviewerName
+      );
+      if (newCode && newCode !== editForm.fullProductCode) {
+        onChange("fullProductCode", newCode);
+      }
+    }
+  }, [editForm.productCode, editForm.userId, editForm.reviewerName, isEditing]);
+
   const rowClass = `font-mono hover:bg-gray-100 ${
     item.isNew ||
     (item.reviewLive &&
@@ -57,14 +81,22 @@ const ProductTableRow = ({
       {/* Product Code */}
       <td className="border px-2">
         {isEditing ? (
-          <input
-            type="text"
-            className="w-32 border rounded px-1 py-0.5"
-            value={editForm.productCode}
-            onChange={(e) => onChange("productCode", e.target.value)}
-          />
+          <div className="flex flex-col space-y-1">
+            <input
+              type="text"
+              className="w-32 border rounded px-1 py-0.5"
+              value={editForm.productCode}
+              onChange={(e) => onChange("productCode", e.target.value)}
+            />
+            {/* Show live generated full product code */}
+            {editForm.fullProductCode && (
+              <span className="text-xs text-gray-600 font-mono">
+                {editForm.fullProductCode}
+              </span>
+            )}
+          </div>
         ) : (
-          item.productCode
+          item.fullProductCode || item.productCode
         )}
       </td>
 
@@ -114,6 +146,13 @@ const ProductTableRow = ({
                 </option>
               ))}
             </select>
+            <input
+              type="text"
+              placeholder="User ID"
+              className="border rounded px-1 py-0.5"
+              value={editForm.userId || ""}
+              onChange={(e) => onChange("userId", e.target.value)}
+            />
           </div>
         ) : (
           <div className="flex flex-col space-y-1 font-mono text-sm">

@@ -17,7 +17,6 @@ const AddProductForm = ({
   emptyItem,
   form,
   setForm,
-  defaultUser,
   setShowAdd,
   fetchItems,
 }) => {
@@ -26,11 +25,13 @@ const AddProductForm = ({
   const [reviewerOptions, setReviewerOptions] = useState([]);
   const [paidByOptions, setPaidByOptions] = useState([]);
 
+  // Fetch dropdown data
   useEffect(() => {
     async function fetchUserIds() {
       const querySnapshot = await getDocs(collection(db, "userId"));
       setUserIdOptions(querySnapshot.docs.map((doc) => doc.data().userId));
     }
+
     async function fetchPlatforms() {
       const querySnapshot = await getDocs(collection(db, "platform"));
       setPlatformOptions(
@@ -40,6 +41,7 @@ const AddProductForm = ({
         setForm((f) => ({ ...f, platform: "amazon" }));
       }
     }
+
     async function fetchReviewers() {
       const querySnapshot = await getDocs(collection(db, "reviewers"));
       const reviewerNames = querySnapshot.docs.map(
@@ -48,32 +50,50 @@ const AddProductForm = ({
       setReviewerOptions(reviewerNames);
       setPaidByOptions(reviewerNames);
     }
+
     fetchUserIds();
     fetchPlatforms();
     fetchReviewers();
   }, []);
 
+  // Automatically generate the full product code
+  const generateFullProductCode = () => {
+    const productCode = form.productCode?.trim() || "";
+    const userId = form.userId?.trim() || "";
+    const reviewerCode = form.reviewerName
+      ? form.reviewerName.replace(/\s+/g, "").slice(0, 3)
+      : "";
+
+    if (productCode && userId && reviewerCode) {
+      return `${productCode}${userId}${reviewerCode}`;
+    }
+    return "";
+  };
+
   const handleAddItem = async (e) => {
     e.preventDefault();
+
+    const format = (val) => capitalizeFirstLetter(val.trim());
+
+    const fullProductCode = generateFullProductCode();
+
     const transformedData = {
       ...form,
-      productName: capitalizeFirstLetter(form.productName.trim()),
-      orderId: form.orderId.trim()
-        ? capitalizeFirstLetter(form.orderId.trim())
-        : "N/A",
-      productCode: capitalizeFirstLetter(form.productCode.trim()),
-      userId: capitalizeFirstLetter(form.userId.trim()),
-      platform: capitalizeFirstLetter(form.platform.trim()),
-      paidBy: capitalizeFirstLetter(form.paidBy.trim()),
-      reviewerName: capitalizeFirstLetter(form.reviewerName.trim()),
+      productName: format(form.productName),
+      orderId: form.orderId.trim() ? format(form.orderId) : "N/A",
+      productCode: format(form.productCode),
+      fullProductCode: fullProductCode, // Auto-generated code added here
+      userId: format(form.userId),
+      platform: format(form.platform),
+      paidBy: format(form.paidBy),
+      reviewerName: format(form.reviewerName),
     };
 
     try {
-      const docRef = await addDoc(collection(db, "items"), {
-        ...transformedData,
-      });
+      const docRef = await addDoc(collection(db, "items"), transformedData);
       const generatedId = docRef.id;
-      console.log("Document written with ID: ", generatedId);
+      console.log("Document written with ID:", generatedId);
+
       await updateDoc(doc(db, "items", generatedId), {
         docId: generatedId,
       });
@@ -82,7 +102,7 @@ const AddProductForm = ({
       setShowAdd(false);
       fetchItems();
     } catch (error) {
-      console.error("Error adding document: ", error);
+      console.error("Error adding document:", error);
     }
   };
 
@@ -122,7 +142,7 @@ const AddProductForm = ({
           required
           value={form.orderedOn}
           onChange={(e) => onFieldChange("orderedOn", e.target.value)}
-          max={new Date().toISOString().split("T")[0]} // optional: prevent future dates
+          max={new Date().toISOString().split("T")[0]}
         />
         <select
           className="border rounded px-2 py-1"
@@ -203,7 +223,14 @@ const AddProductForm = ({
           onChange={(e) => onFieldChange("refundAmount", e.target.value)}
         />
 
-        <div className="flex justify-between">
+        {/* Display auto-generated Full Product Code */}
+        {generateFullProductCode() && (
+          <div className="bg-white border border-dashed rounded p-2 text-gray-700 text-sm">
+            <strong>Generated Product Code:</strong> {generateFullProductCode()}
+          </div>
+        )}
+
+        <div className="flex justify-between mt-2">
           <button
             type="submit"
             className="bg-blue-600 text-white py-2 px-4 rounded w-36"
