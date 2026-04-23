@@ -10,6 +10,7 @@ const ProductTable = ({
   handleDelete,
   reviewerOptions,
   platformOptions,
+  userIdOptions,
 }) => {
   const [editingRowId, setEditingRowId] = useState(null);
   const [editForm, setEditForm] = useState({});
@@ -142,6 +143,7 @@ const ProductTable = ({
             handleDelete={handleDelete}
             reviewerOptions={reviewerOptions || []}
             platformOptions={platformOptions || []}
+            userIdOptions={userIdOptions || []}
           />
         ))}
       </tbody>

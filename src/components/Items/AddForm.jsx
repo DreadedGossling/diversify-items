@@ -28,7 +28,7 @@ const AddProductForm = ({
   // Fetch dropdown data
   useEffect(() => {
     async function fetchUserIds() {
-      const querySnapshot = await getDocs(collection(db, "userId"));
+      const querySnapshot = await getDocs(collection(db, "users"));
       setUserIdOptions(querySnapshot.docs.map((doc) => doc.data().userId));
     }
 

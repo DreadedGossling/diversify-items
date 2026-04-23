@@ -18,6 +18,7 @@ const ProductTableRow = ({
   handleDelete,
   reviewerOptions,
   platformOptions,
+  userIdOptions,
 }) => {
   // ✅ Helper function to generate full product code dynamically
   const generateFullProductCode = (productCode, userId, reviewerName) => {
@@ -146,13 +147,20 @@ const ProductTableRow = ({
                 </option>
               ))}
             </select>
-            <input
-              type="text"
-              placeholder="User ID"
+            <select
               className="border rounded px-1 py-0.5"
               value={editForm.userId || ""}
               onChange={(e) => onChange("userId", e.target.value)}
-            />
+            >
+              <option value="" disabled>
+                Select User ID
+              </option>
+              {(userIdOptions || []).map((userId) => (
+                <option key={userId} value={userId}>
+                  {userId}
+                </option>
+              ))}
+            </select>
           </div>
         ) : (
           <div className="flex flex-col space-y-1 font-mono text-sm">

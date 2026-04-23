@@ -53,18 +53,19 @@ const ItemTable = ({ user }) => {
   // Pagination: continuous serial
   const paginatedItems = filteredItems.slice(
     (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
+    currentPage * itemsPerPage,
   );
 
   useEffect(() => {
     async function fetchUserIds() {
-      const querySnapshot = await getDocs(collection(db, "userId"));
-      setUserIdOptions(querySnapshot.docs.map((doc) => doc.data().userId));
+      const usersSnapshot = await getDocs(collection(db, "users"));
+      const usersUserIds = usersSnapshot.docs.map((doc) => doc.data().userId);
+      setUserIdOptions(usersUserIds);
     }
     async function fetchPlatforms() {
       const querySnapshot = await getDocs(collection(db, "platform"));
       setPlatformOptions(
-        querySnapshot.docs.map((doc) => doc.data().platformName)
+        querySnapshot.docs.map((doc) => doc.data().platformName),
       );
       if (!form.platform) {
         setForm((f) => ({ ...f, platform: "amazon" }));
@@ -73,7 +74,7 @@ const ItemTable = ({ user }) => {
     async function fetchReviewers() {
       const querySnapshot = await getDocs(collection(db, "reviewers"));
       const reviewerNames = querySnapshot.docs.map(
-        (doc) => doc.data().reviewerName
+        (doc) => doc.data().reviewerName,
       );
       setReviewerOptions(reviewerNames);
       setReviewedByOptions(reviewerNames);
@@ -105,19 +106,18 @@ const ItemTable = ({ user }) => {
         ...doc.data(),
       }));
       setAllItems(fetchedItems);
-
       let filtered = fetchedItems;
 
       // Paid/Active toggle
       if (showPaid) {
         filtered = filtered.filter(
-          (item) => item.reviewLive && item.refundProcess && item.received
+          (item) => item.reviewLive && item.refundProcess && item.received,
         );
         if (filterUser !== "All")
           filtered = filtered.filter((item) => item.userId === filterUser);
         if (filterReviewedBy !== "All")
           filtered = filtered.filter(
-            (item) => item.reviewerName === filterReviewedBy
+            (item) => item.reviewerName === filterReviewedBy,
           );
         if (filterStatus !== "All") {
           if (filterStatus === "Review Live")
@@ -138,7 +138,7 @@ const ItemTable = ({ user }) => {
                   item.reject === true &&
                   item.refundSubmitted === true &&
                   item.refundProcess === false &&
-                  item.received === false)
+                  item.received === false),
             );
           else if (filterStatus === "New")
             filtered = filtered.filter(
@@ -147,7 +147,7 @@ const ItemTable = ({ user }) => {
                 !item.reviewLive &&
                 !item.reject &&
                 !item.refundProcess &&
-                !item.received
+                !item.received,
             );
         }
       } else {
@@ -157,7 +157,7 @@ const ItemTable = ({ user }) => {
           filtered = filtered.filter((item) => item.userId === filterUser);
         if (filterReviewedBy !== "All")
           filtered = filtered.filter(
-            (item) => item.reviewerName === filterReviewedBy
+            (item) => item.reviewerName === filterReviewedBy,
           );
         if (filterStatus !== "All") {
           if (filterStatus === "Review Live")
@@ -178,7 +178,7 @@ const ItemTable = ({ user }) => {
                   item.reject === true &&
                   item.refundSubmitted === true &&
                   item.refundProcess === false &&
-                  item.received === false)
+                  item.received === false),
             );
           else if (filterStatus === "New")
             filtered = filtered.filter(
@@ -187,7 +187,7 @@ const ItemTable = ({ user }) => {
                 !item.reviewLive &&
                 !item.reject &&
                 !item.refundProcess &&
-                !item.received
+                !item.received,
             );
         }
       }
@@ -210,7 +210,7 @@ const ItemTable = ({ user }) => {
       try {
         const querySnapshot = await getDocs(collection(db, "reviewers"));
         setReviewedByOptions(
-          querySnapshot.docs.map((doc) => doc.data().reviewerName)
+          querySnapshot.docs.map((doc) => doc.data().reviewerName),
         );
       } catch (err) {
         setReviewedByOptions([]);
@@ -218,11 +218,6 @@ const ItemTable = ({ user }) => {
     }
     fetchReviewedByOptions();
   }, []);
-
-  // Unique User Ids for filter
-  const uniqueUserIds = Array.from(
-    new Set(allItems.map((item) => item.userId).filter(Boolean))
-  );
 
   // Edit/Update handlers
   const handleUpdate = async (id, updatedData) => {
@@ -264,7 +259,7 @@ const ItemTable = ({ user }) => {
                 className="border border-cyan-400 rounded text-sm sm:w-24 md:w-32 md:h-8"
               >
                 <option value="All">All</option>
-                {uniqueUserIds.map((uid) => (
+                {userIdOptions.map((uid) => (
                   <option key={uid} value={uid}>
                     {uid}
                   </option>
