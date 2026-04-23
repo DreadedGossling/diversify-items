@@ -78,7 +78,7 @@ const ItemTable = ({ user }) => {
     fetchUserIds();
     fetchPlatforms();
     fetchReviewers();
-  }, []);
+  }, [setForm]);
 
   const getStatus = (item) => {
     if (
