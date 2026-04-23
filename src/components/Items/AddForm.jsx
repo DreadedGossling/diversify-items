@@ -53,7 +53,7 @@ const AddProductForm = ({
 
     // Set default platform if not already set
     setForm((f) => ({ ...f, platform: f.platform || "amazon" }));
-  }, [emptyItem]);
+  }, [emptyItem, setForm]);
 
   // Automatically generate the full product code
   const generateFullProductCode = () => {
