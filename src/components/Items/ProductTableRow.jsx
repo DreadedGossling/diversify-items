@@ -41,7 +41,7 @@ const ProductTableRow = ({
         onChange("fullProductCode", newCode);
       }
     }
-  }, [editForm.productCode, editForm.userId, editForm.reviewerName, isEditing]);
+  }, [editForm.productCode, editForm.userId, editForm.reviewerName, editForm.fullProductCode, isEditing, onChange]);
 
   const rowClass = `font-mono hover:bg-gray-100 ${
     item.isNew ||

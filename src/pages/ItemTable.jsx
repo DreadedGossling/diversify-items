@@ -33,7 +33,6 @@ const emptyItem = {
 };
 
 const ItemTable = ({ user }) => {
-  const [allItems, setAllItems] = useState([]);
   const [filteredItems, setFilteredItems] = useState([]);
   const [showAdd, setShowAdd] = useState(false);
   const [form, setForm] = useState(emptyItem);
@@ -64,12 +63,9 @@ const ItemTable = ({ user }) => {
     }
     async function fetchPlatforms() {
       const querySnapshot = await getDocs(collection(db, "platform"));
-      setPlatformOptions(
-        querySnapshot.docs.map((doc) => doc.data().platformName),
-      );
-      if (!form.platform) {
-        setForm((f) => ({ ...f, platform: "amazon" }));
-      }
+      const platforms = querySnapshot.docs.map((doc) => doc.data().platformName);
+      setPlatformOptions(platforms);
+      setForm((f) => ({ ...f, platform: f.platform || "amazon" }));
     }
     async function fetchReviewers() {
       const querySnapshot = await getDocs(collection(db, "reviewers"));
@@ -105,7 +101,7 @@ const ItemTable = ({ user }) => {
         id: doc.id,
         ...doc.data(),
       }));
-      setAllItems(fetchedItems);
+      // setAllItems(fetchedItems);
       let filtered = fetchedItems;
 
       // Paid/Active toggle
@@ -195,13 +191,13 @@ const ItemTable = ({ user }) => {
       setCurrentPage(1);
     } catch (error) {
       console.error("Error fetching items:", error);
-      setAllItems([]);
       setFilteredItems([]);
     }
   };
 
   useEffect(() => {
     fetchItems();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, filterUser, filterReviewedBy, filterStatus, showPaid]);
 
   // Reviewed By dropdown

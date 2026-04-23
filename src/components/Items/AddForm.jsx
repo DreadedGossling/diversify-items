@@ -34,12 +34,8 @@ const AddProductForm = ({
 
     async function fetchPlatforms() {
       const querySnapshot = await getDocs(collection(db, "platform"));
-      setPlatformOptions(
-        querySnapshot.docs.map((doc) => doc.data().platformName)
-      );
-      if (!form.platform) {
-        setForm((f) => ({ ...f, platform: "amazon" }));
-      }
+      const platforms = querySnapshot.docs.map((doc) => doc.data().platformName);
+      setPlatformOptions(platforms);
     }
 
     async function fetchReviewers() {
@@ -54,7 +50,10 @@ const AddProductForm = ({
     fetchUserIds();
     fetchPlatforms();
     fetchReviewers();
-  }, []);
+
+    // Set default platform if not already set
+    setForm((f) => ({ ...f, platform: f.platform || "amazon" }));
+  }, [emptyItem]);
 
   // Automatically generate the full product code
   const generateFullProductCode = () => {
