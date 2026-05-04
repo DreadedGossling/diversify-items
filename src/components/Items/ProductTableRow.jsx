@@ -35,13 +35,20 @@ const ProductTableRow = ({
       const newCode = generateFullProductCode(
         editForm.productCode,
         editForm.userId,
-        editForm.reviewerName
+        editForm.reviewerName,
       );
       if (newCode && newCode !== editForm.fullProductCode) {
         onChange("fullProductCode", newCode);
       }
     }
-  }, [editForm.productCode, editForm.userId, editForm.reviewerName, editForm.fullProductCode, isEditing, onChange]);
+  }, [
+    editForm.productCode,
+    editForm.userId,
+    editForm.reviewerName,
+    editForm.fullProductCode,
+    isEditing,
+    onChange,
+  ]);
 
   const rowClass = `font-mono hover:bg-gray-100 ${
     item.isNew ||
@@ -52,35 +59,39 @@ const ProductTableRow = ({
       !item.received)
       ? "bg-white hover:bg-gray-100"
       : // slate: ALL final steps done
-      item.reviewLive &&
-        item.refundProcess &&
-        item.refundSubmitted &&
-        item.received
-      ? "bg-slate-400 hover:bg-slate-300"
-      : // lime: refund in process but not received yet
-      item.reviewLive &&
-        item.refundProcess &&
-        item.refundSubmitted &&
-        !item.received
-      ? "bg-lime-400 hover:bg-lime-300"
-      : // yellow: rejected
-      item.reviewLive && item.reject
-      ? "bg-yellow-300 hover:bg-yellow-200"
-      : // indigo: review live and submitted but processing hasn't started
-      item.reviewLive && !item.reject && item.refundSubmitted
-      ? "bg-indigo-300 hover:bg-indigo-200"
-      : "bg-white hover:bg-gray-100"
+        item.reviewLive &&
+          item.refundProcess &&
+          item.refundSubmitted &&
+          item.received
+        ? "bg-slate-400 hover:bg-slate-300"
+        : // lime: refund in process but not received yet
+          item.reviewLive &&
+            item.refundProcess &&
+            item.refundSubmitted &&
+            !item.received
+          ? "bg-lime-400 hover:bg-lime-300"
+          : // yellow: rejected
+            item.reviewLive && item.reject
+            ? "bg-yellow-300 hover:bg-yellow-200"
+            : // indigo: review live and submitted but processing hasn't started
+              item.reviewLive && !item.reject && item.refundSubmitted
+              ? "bg-indigo-300 hover:bg-indigo-200"
+              : "bg-white hover:bg-gray-100"
   }`;
 
   return (
     <tr key={item.docId} className={rowClass}>
       {/* Serial Number */}
-      <td className="border px-2 text-center font-bold">
+      <td className={`border px-2 text-center font-bold ${
+        item.dealType === "Rating" ? "bg-purple-600" :
+        item.dealType === "Review" ? "bg-teal-600" :
+        item.dealType === "Review Submitted" ? "bg-orange-600" : ""
+      }`}>
         {item.serialNumber || itemsPerPage * (currentPage - 1) + idx + 1}
       </td>
 
-      {/* Product Code */}
-      <td className="border px-2">
+      {/* Product Code and Amount Paid */}
+      <td className="border px-2 text-center">
         {isEditing ? (
           <div className="flex flex-col space-y-1">
             <input
@@ -95,9 +106,23 @@ const ProductTableRow = ({
                 {editForm.fullProductCode}
               </span>
             )}
+            <input
+              type="number"
+              className="w-32 border rounded px-1 py-0.5"
+              value={editForm.paidAmount}
+              onChange={(e) => onChange("paidAmount", e.target.value)}
+              min="0"
+              step="0.01"
+              placeholder="Paid Amount"
+            />
           </div>
         ) : (
-          item.fullProductCode || item.productCode
+          <div className="flex flex-col space-y-1 font-mono text-sm">
+            <span>{item.fullProductCode || item.productCode}</span>
+            <span className="text-green-600 font-semibold">
+              ₹{item.paidAmount}/-
+            </span>
+          </div>
         )}
       </td>
 
@@ -172,22 +197,6 @@ const ProductTableRow = ({
         )}
       </td>
 
-      {/* Amount Paid */}
-      <td className="border px-2 text-center">
-        {isEditing ? (
-          <input
-            type="number"
-            className="w-32 border rounded px-1 py-0.5"
-            value={editForm.amountPaid}
-            onChange={(e) => onChange("amountPaid", e.target.value)}
-            min="0"
-            step="0.01"
-          />
-        ) : (
-          item.amountPaid
-        )}
-      </td>
-
       {/* Paid By */}
       <td className="border px-2">
         {isEditing ? (
@@ -210,6 +219,52 @@ const ProductTableRow = ({
         )}
       </td>
 
+      {/* Deal Type & Filled Amount */}
+      <td className="border px-2">
+        {isEditing ? (
+          <div className="flex flex-col space-y-1">
+            <select
+              className="w-32 border rounded px-1 py-0.5"
+              value={editForm.dealType}
+              onChange={(e) => onChange("dealType", e.target.value)}
+            >
+              <option value="" disabled>
+                Select Deal Type
+              </option>
+              <option value="Review">Review</option>
+              <option value="Review Submitted">Review Submitted</option>
+              <option value="Rating">Rating</option>
+            </select>
+            <input
+              type="number"
+              className="w-32 border rounded px-1 py-0.5"
+              value={editForm.filledAmount}
+              onChange={(e) => onChange("filledAmount", e.target.value)}
+              min="0"
+              step="0.01"
+              placeholder="Filled Amount"
+            />
+          </div>
+        ) : (
+          <div className="flex flex-col space-y-1 font-mono text-sm">
+            <span
+              className={`text-center rounded px-2 py-1 font-semibold ${
+                item.dealType === "Rating"
+                  ? "bg-purple-600 text-white"
+                  : item.dealType === "Review"
+                  ? "bg-teal-600 text-white"
+                  : item.dealType === "Review Submitted"
+                  ? "bg-orange-600 text-white"
+                  : "bg-gray-200 text-gray-700"
+              }`}
+            >
+              {item.dealType} Deal
+            </span>
+            <span className="text-center">{`₹${item.filledAmount}/-`}</span>
+          </div>
+        )}
+      </td>
+
       {/* Ordered On */}
       <td className="border px-2 text-center">
         {isEditing ? (
@@ -224,19 +279,34 @@ const ProductTableRow = ({
         )}
       </td>
 
-      {/* Refund Amount */}
+      {/* Less Amount & Refund Amount */}
       <td className="border px-2 text-center">
         {isEditing ? (
-          <input
-            type="number"
-            className="w-32 border rounded px-1 py-0.5"
-            value={editForm.refundAmount}
-            onChange={(e) => onChange("refundAmount", e.target.value)}
-            min="0"
-            step="0.01"
-          />
+          <div className="flex flex-col space-y-1">
+            <input
+              type="number"
+              className="w-32 border rounded px-1 py-0.5"
+              value={editForm.lessAmount}
+              onChange={(e) => onChange("lessAmount", e.target.value)}
+              min="0"
+              step="0.01"
+              placeholder="Less Amount"
+            />
+            <input
+              type="number"
+              className="w-32 border rounded px-1 py-0.5"
+              value={editForm.refundAmount}
+              onChange={(e) => onChange("refundAmount", e.target.value)}
+              min="0"
+              step="0.01"
+              placeholder="Refund Amount"
+            />
+          </div>
         ) : (
-          item.refundAmount
+          <div className="flex flex-col space-y-1 font-mono text-sm">
+            <span>₹{item.lessAmount} Less</span>
+            <span className="text-green-800 font-semibold font-mono">₹{item.refundAmount}/-</span>
+          </div>
         )}
       </td>
 
@@ -294,8 +364,8 @@ const ProductTableRow = ({
                 !editForm.returnCloseOn || editForm.returnCloseOn === "-"
                   ? "-"
                   : editForm.returnCloseOn === "No Return"
-                  ? "No Return"
-                  : "Pick Date"
+                    ? "No Return"
+                    : "Pick Date"
               }
               onChange={(e) => {
                 const val = e.target.value;

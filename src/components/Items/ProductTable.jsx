@@ -25,8 +25,11 @@ const ProductTable = ({
       docId: item.docId || "",
       platform: item.platform || "",
       reviewerName: item.reviewerName || "",
-      amountPaid: item.amountPaid || "",
+      dealType: item.dealType || "",
+      paidAmount: item.paidAmount || "",
       paidBy: item.paidBy || "",
+      filledAmount: item.filledAmount || "",
+      lessAmount: item.lessAmount || "",
       refundAmount: item.refundAmount || "",
       deliveredOn: item.deliveredOn || "",
       reviewedOn: item.reviewedOn || "",
@@ -72,8 +75,12 @@ const ProductTable = ({
           <th className=" border-2 border-black px-2 py-1 bg-blue-500 font-serif shadow-lg shadow-slate-600">
             S.No.
           </th>
-          <th className=" border-2 border-black px-2 py-1 bg-blue-500 font-serif shadow-lg shadow-slate-600">
-            Product Code
+          <th className=" border-2 border-black px-2 py-1 bg-blue-500 font-serif min-w-[180px] shadow-lg shadow-slate-600">
+            <div className="flex flex-col">
+              <div className="pb-1">Product Code</div>
+              <div className="border-t border-black my-0.5" />
+              <div className="pt-1">Amount Paid</div>
+            </div>
           </th>
           <th className=" border-2 border-black px-2 py-1 bg-blue-500 font-serif min-w-[180px] shadow-lg shadow-slate-600">
             <div className="flex flex-col">
@@ -83,16 +90,24 @@ const ProductTable = ({
             </div>
           </th>
           <th className=" border-2 border-black px-2 py-1 bg-blue-500 font-serif shadow-lg shadow-slate-600">
-            Amount Paid
-          </th>
-          <th className=" border-2 border-black px-2 py-1 bg-blue-500 font-serif shadow-lg shadow-slate-600">
             Paid By
+          </th>
+          <th className=" border-2 border-black px-2 py-1 bg-blue-500 font-serif min-w-[160px] shadow-lg shadow-slate-600">
+            <div className="flex flex-col">
+              <div className="pb-1">Deal Type</div>
+              <div className="border-t border-black my-0.5" />
+              <div className="pt-1">Filled Amount</div>
+            </div>
           </th>
           <th className="border-2 border-black px-2 py-1 bg-blue-500 font-serif min-w-[125px] shadow-lg shadow-slate-600">
             Ordered On
           </th>
-          <th className=" border-2 border-black px-2 py-1 bg-blue-500 font-serif shadow-lg shadow-slate-600">
-            Refund Amount
+        <th className=" border-2 border-black px-2 py-1 bg-blue-500 font-serif min-w-[160px] shadow-lg shadow-slate-600">
+            <div className="flex flex-col">
+              <div className="pb-1">Less Amount</div>
+              <div className="border-t border-black my-0.5" />
+              <div className="pt-1">Refund Amount</div>
+            </div>
           </th>
           <th className=" border-2 border-black px-2 py-1 bg-blue-500 font-serif shadow-lg shadow-slate-600">
             Delivered On

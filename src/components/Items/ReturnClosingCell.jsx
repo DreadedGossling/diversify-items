@@ -5,6 +5,8 @@ const ReturnClosingCell = ({ dateStr }) => {
   const [daysLeft, setDaysLeft] = useState(() => getDaysDifference(dateStr));
 
   useEffect(() => {
+    setDaysLeft(getDaysDifference(dateStr));
+
     // Calculate milliseconds until next midnight
     const now = new Date();
     const msToNextMidnight = new Date(
@@ -13,17 +15,19 @@ const ReturnClosingCell = ({ dateStr }) => {
       now.getDate() + 1
     ) - now;
 
+    let intervalId;
     const timeoutId = setTimeout(() => {
       setDaysLeft(getDaysDifference(dateStr));
       // After first update at midnight, update every 24 hours
-      const intervalId = setInterval(() => {
+      intervalId = setInterval(() => {
         setDaysLeft(getDaysDifference(dateStr));
       }, 24 * 60 * 60 * 1000);
-
-      return () => clearInterval(intervalId);
     }, msToNextMidnight);
 
-    return () => clearTimeout(timeoutId);
+    return () => {
+      clearTimeout(timeoutId);
+      if (intervalId) clearInterval(intervalId);
+    };
   }, [dateStr]);
 
   if (!dateStr) return null;
@@ -55,9 +59,12 @@ const ReturnClosingCell = ({ dateStr }) => {
   }
 
   // daysLeft < 0 means date passed
+  const overdueDays = Math.min(Math.abs(daysLeft), 15);
   return (
     <span className="text-center text-red-600 font-semibold">
-      <p>Over</p>
+      <p>
+        {overdueDays} {overdueDays === 1 ? "Day" : "Days"} Overdue
+      </p>
       <p>{formatDate(dateStr)}</p>
     </span>
   );

@@ -53,6 +53,7 @@ const OrderedDateCountdown = ({ orderDate }) => {
     return (
       <div className="text-red-800 font-semibold text-center space-y-2">
         <p>Portal Closed</p>
+        <p>({formatDate(orderDate)})</p>
       </div>
     );
   }

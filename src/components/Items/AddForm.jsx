@@ -25,6 +25,8 @@ const AddProductForm = ({
   const [reviewerOptions, setReviewerOptions] = useState([]);
   const [paidByOptions, setPaidByOptions] = useState([]);
 
+  const [isFilledSameAsPaid, setIsFilledSameAsPaid] = useState(false);
+
   // Fetch dropdown data
   useEffect(() => {
     async function fetchUserIds() {
@@ -34,14 +36,16 @@ const AddProductForm = ({
 
     async function fetchPlatforms() {
       const querySnapshot = await getDocs(collection(db, "platform"));
-      const platforms = querySnapshot.docs.map((doc) => doc.data().platformName);
+      const platforms = querySnapshot.docs.map(
+        (doc) => doc.data().platformName,
+      );
       setPlatformOptions(platforms);
     }
 
     async function fetchReviewers() {
       const querySnapshot = await getDocs(collection(db, "reviewers"));
       const reviewerNames = querySnapshot.docs.map(
-        (doc) => doc.data().reviewerName
+        (doc) => doc.data().reviewerName,
       );
       setReviewerOptions(reviewerNames);
       setPaidByOptions(reviewerNames);
@@ -50,9 +54,6 @@ const AddProductForm = ({
     fetchUserIds();
     fetchPlatforms();
     fetchReviewers();
-
-    // Set default platform if not already set
-    setForm((f) => ({ ...f, platform: f.platform || "amazon" }));
   }, [emptyItem, setForm]);
 
   // Automatically generate the full product code
@@ -76,6 +77,11 @@ const AddProductForm = ({
 
     const fullProductCode = generateFullProductCode();
 
+    // Calculate filledAmount and refundAmount
+    const filledAmount = isFilledSameAsPaid ? parseFloat(form.paidAmount) : parseFloat(form.filledAmount || 0);
+    const lessAmount = parseFloat(form.lessAmount || 0);
+    const refundAmount = filledAmount - lessAmount;
+
     const transformedData = {
       ...form,
       productName: format(form.productName),
@@ -86,6 +92,10 @@ const AddProductForm = ({
       platform: format(form.platform),
       paidBy: format(form.paidBy),
       reviewerName: format(form.reviewerName),
+      dealType: form.dealType,
+      filledAmount: filledAmount,
+      lessAmount: lessAmount,
+      refundAmount: refundAmount,
     };
 
     try {
@@ -98,6 +108,7 @@ const AddProductForm = ({
       });
 
       setForm(emptyItem);
+      setIsFilledSameAsPaid(false);
       setShowAdd(false);
       fetchItems();
     } catch (error) {
@@ -191,6 +202,19 @@ const AddProductForm = ({
         <select
           className="border rounded px-2 py-1"
           required
+          value={form.dealType}
+          onChange={(e) => onFieldChange("dealType", e.target.value)}
+        >
+          <option value="" disabled>
+            Select Deal Type
+          </option>
+          <option value="Review">Review</option>
+          <option value="Review Submitted">Review Submitted</option>
+          <option value="Rating">Rating</option>
+        </select>
+        <select
+          className="border rounded px-2 py-1"
+          required
           value={form.paidBy}
           onChange={(e) => onFieldChange("paidBy", e.target.value)}
         >
@@ -205,21 +229,42 @@ const AddProductForm = ({
         </select>
         <input
           className="border rounded px-2 py-1"
-          placeholder="Amount Paid"
+          placeholder="Paid Amount"
           required
-          value={form.amountPaid}
+          value={form.paidAmount}
           min={0}
           type="number"
-          onChange={(e) => onFieldChange("amountPaid", e.target.value)}
+          onChange={(e) => onFieldChange("paidAmount", e.target.value)}
         />
+        <label className="flex items-center">
+          <input
+            type="checkbox"
+            checked={isFilledSameAsPaid}
+            onChange={(e) => setIsFilledSameAsPaid(e.target.checked)}
+            className="mr-2"
+          />
+          Filled amount is same as Paid amount
+        </label>
+
+        {!isFilledSameAsPaid && (
+          <input
+            className="border rounded px-2 py-1"
+            placeholder="Filled Amount"
+            required
+            value={form.filledAmount || ""}
+            min={0}
+            type="number"
+            onChange={(e) => onFieldChange("filledAmount", e.target.value)}
+          />
+        )}
         <input
           className="border rounded px-2 py-1"
-          placeholder="Refund Amount"
+          placeholder="Less Amount"
           required
-          value={form.refundAmount}
+          value={form.lessAmount}
           min={0}
           type="number"
-          onChange={(e) => onFieldChange("refundAmount", e.target.value)}
+          onChange={(e) => onFieldChange("lessAmount", e.target.value)}
         />
 
         {/* Display auto-generated Full Product Code */}
@@ -240,6 +285,7 @@ const AddProductForm = ({
             type="button"
             className="bg-gray-400 text-white py-2 px-4 rounded w-36"
             onClick={() => {
+              setIsFilledSameAsPaid(false);
               setShowAdd(false);
               setForm(emptyItem);
             }}

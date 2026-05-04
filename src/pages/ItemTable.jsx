@@ -18,10 +18,13 @@ const emptyItem = {
   userId: "",
   platform: "",
   reviewerName: "",
+  dealType: "",
   refundSubmitted: false,
-  amountPaid: "",
+  paidAmount: "",
   paidBy: "",
   orderedOn: new Date().toISOString().split("T")[0],
+  filledAmount: "",
+  lessAmount: "",
   refundAmount: "",
   deliveredOn: "-",
   reviewedOn: "-",
@@ -65,7 +68,6 @@ const ItemTable = ({ user }) => {
       const querySnapshot = await getDocs(collection(db, "platform"));
       const platforms = querySnapshot.docs.map((doc) => doc.data().platformName);
       setPlatformOptions(platforms);
-      setForm((f) => ({ ...f, platform: f.platform || "amazon" }));
     }
     async function fetchReviewers() {
       const querySnapshot = await getDocs(collection(db, "reviewers"));
